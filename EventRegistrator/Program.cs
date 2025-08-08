@@ -2,7 +2,7 @@
 using System.Net;
 using Telegram.Bot;
 
-namespace EventWriter
+namespace EventRegistrator
 {
     internal class Program
     {

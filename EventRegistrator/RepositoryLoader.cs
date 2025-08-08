@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace EventWriter
+namespace EventRegistrator
 {
     public class RepositoryLoader
     {

@@ -1,6 +1,6 @@
 ﻿using Telegram.Bot.Types;
 
-namespace EventWriter
+namespace EventRegistrator
 {
     public class Event
     {

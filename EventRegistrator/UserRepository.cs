@@ -1,4 +1,4 @@
-﻿namespace EventWriter
+﻿namespace EventRegistrator
 {
     [Serializable]
     public class UserRepository

@@ -3,7 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace EventWriter
+namespace EventRegistrator
 {
     public class MessageSender
     {

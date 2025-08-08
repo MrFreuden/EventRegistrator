@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36212.18 d17.14
+VisualStudioVersion = 17.14.36212.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventWriter", "EventWriter\EventWriter.csproj", "{443DB5C7-D64E-4F14-B18F-24C3D790951E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventRegistrator", "EventRegistrator\EventRegistrator.csproj", "{443DB5C7-D64E-4F14-B18F-24C3D790951E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

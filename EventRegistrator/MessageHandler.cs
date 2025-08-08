@@ -2,7 +2,7 @@
 using Telegram.Bot.Types;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace EventWriter
+namespace EventRegistrator
 {
     public class MessageHandler
     {

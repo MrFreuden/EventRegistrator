@@ -1,4 +1,4 @@
-﻿namespace EventWriter
+﻿namespace EventRegistrator
 {
     public class TimeSlot
     {
