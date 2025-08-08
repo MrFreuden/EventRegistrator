@@ -60,9 +60,7 @@ namespace EventRegistrator
             var bot = new TelegramBotClient(apiToken);
             var loader = new RepositoryLoader(EnvLoader.GetDataPath());
             var userRepository = loader.LoadData();
-            EnvLoader.LoadDefaultUser1(userRepository);
-            EnvLoader.LoadDefaultUser2(userRepository);
-            EnvLoader.LoadDefaultUser3(userRepository);
+
             var messageSender = new MessageSender(bot);
 
             var handler = new BotHandler(new MessageHandler(userRepository, messageSender), new CallbackQueryHandler(userRepository, messageSender));
