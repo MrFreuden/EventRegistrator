@@ -1,34 +1,37 @@
-﻿namespace EventRegistrator
+﻿using Newtonsoft.Json;
+
+namespace EventRegistrator
 {
     [Serializable]
     public class UserRepository
     {
-        public Dictionary<long, UserAdmin> users { get; set; }
+        [JsonProperty]
+        private readonly Dictionary<long, UserAdmin> _users;
 
         public UserRepository()
         {
-            users = new();
+            _users = new();
         }
 
         public void AddUser(UserAdmin user)
         {
-            if (!users.ContainsKey(user.Id))
+            if (!_users.ContainsKey(user.Id))
             {
-                users[user.Id] = user;
+                _users[user.Id] = user;
             }
         }
 
         public void AddUser(long user)
         {
-            if (!users.ContainsKey(user))
+            if (!_users.ContainsKey(user))
             {
-                users[user] = new UserAdmin(user);
+                _users[user] = new UserAdmin(user);
             }
         }
 
         public UserAdmin GetUser(long id)
         {
-            if (users.TryGetValue(id, out UserAdmin? value))
+            if (_users.TryGetValue(id, out UserAdmin? value))
             {
                 return value;
             }
@@ -37,12 +40,17 @@
 
         public UserAdmin GetUserByTargetChat(long targetChatId)
         {
-            var user = users.FirstOrDefault(u => u.Value.TargetChatId == targetChatId).Value;
+            var user = _users.FirstOrDefault(u => u.Value.TargetChatId == targetChatId).Value;
             if (user != null)
             {
                 return user;
             }
             throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            _users.Clear();
         }
     }
 }

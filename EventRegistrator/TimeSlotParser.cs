@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Sprache;
+using System.Globalization;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace EventRegistrator
 {
     public static class TimeSlotParser
     {
+        private static readonly Regex TokenSplit = new Regex(@"[\s,;]+");
+        private static readonly Regex SlotOrTimePattern = new Regex(@"^\d{1,2}(:\d{2})?[\.\)]?$"); // 1  1.  1)  10:00 10:00.
         private static readonly Regex TemplateRegex = new Regex(@"(\d{1,2}[:\.]\d{2})\s*[-–]\s*(\d+)\s+вільних місць", RegexOptions.Compiled);
-
-        private static readonly Regex RegistrationRegex = new Regex(@"^([^\d]+)\s+(\d{1,2}(?:[:\.]\d{2})?)$", RegexOptions.Compiled);
 
         public static List<TimeSlot> ExtractTimeSlotsFromTemplate(string templateText, DateTime eventDate)
         {
@@ -45,37 +42,110 @@ namespace EventRegistrator
             return timeSlots;
         }
 
-        public static Registration ParseRegistrationMessage(string message, long userId, DateTime eventDate)
+        public static Dictionary<int, TimeSpan> GetMaper(string templateText)
         {
-            if (string.IsNullOrWhiteSpace(message))
-                return null;
+            var dic = new Dictionary<int, TimeSpan>();
 
-            var match = RegistrationRegex.Match(message);
-            if (!match.Success)
-                return null;
+            if (string.IsNullOrWhiteSpace(templateText))
+                return dic;
 
-            string name = match.Groups[1].Value.Trim();
-            string timeStr = match.Groups[2].Value;
+            var lines = templateText.Split(
+                new[] { "\r\n", "\n", "\r" },
+                StringSplitOptions.RemoveEmptyEntries
+            );
 
-            if (timeStr.Contains(':') || timeStr.Contains('.'))
+            int i = 1;
+            foreach (var line in lines)
             {
-                timeStr = timeStr.Replace('.', ':');
-
-                if (!timeStr.Contains(':'))
-                    timeStr += ":00";
-
-                if (TimeSpan.TryParse(timeStr, out TimeSpan time))
+                var match = TemplateRegex.Match(line);
+                if (match.Success)
                 {
-                    DateTime registrationTime = eventDate.Date.Add(time);
-                    return new Registration(userId, name, registrationTime);
+                    string timeStr = match.Groups[1].Value.Replace('.', ':');    
+
+                    if (TimeSpan.TryParse(timeStr, out TimeSpan time))
+                    {
+                        dic.Add(i, time);
+                        i++;
+                    }
                 }
             }
-            else if (int.TryParse(timeStr, out int slotNumber))
+
+            return dic;
+        }
+
+
+        public static List<Registration> ParseRegistrationMessage(string input, long userId, DateTime eventDate, Dictionary<int, TimeSpan> slotMap, int messageId)
+        {
+            var result = new List<Registration>();
+            if (string.IsNullOrWhiteSpace(input)) return result;
+
+            var tokens = TokenSplit.Split(input.Trim());
+            int i = 0;
+
+            while (i < tokens.Length)
             {
-                return new Registration(userId, name, DateTime.MinValue.AddHours(slotNumber));
+                if (string.IsNullOrWhiteSpace(tokens[i])) { i++; continue; }
+
+                var nameParts = new List<string>();
+                while (i < tokens.Length && !IsSlotToken(tokens[i]))
+                {
+                    nameParts.Add(tokens[i]);
+                    i++;
+                }
+
+                if (nameParts.Count == 0)
+                {
+                    i++;
+                    continue;
+                }
+
+                var name = string.Join(" ", nameParts);
+
+                bool anySlot = false;
+                while (i < tokens.Length && IsSlotToken(tokens[i]))
+                {
+                    var slotToken = tokens[i++];
+                    if (TryResolveSlotToken(slotToken, eventDate, slotMap, out DateTime registrationTime))
+                    {
+                        result.Add(new Registration(userId, name, registrationTime, messageId));
+                        anySlot = true;
+                    }
+                }
+
+                if (!anySlot)
+                {
+                }
             }
 
-            return null;
+            return result;
+        }
+
+        private static bool IsSlotToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token)) return false;
+            return SlotOrTimePattern.IsMatch(token.Trim());
+        }
+
+        private static bool TryResolveSlotToken(string token, DateTime eventDate, Dictionary<int, TimeSpan> slotMap, out DateTime time)
+        {
+            time = default;
+            if (string.IsNullOrWhiteSpace(token)) return false;
+
+            var t = token.Trim().TrimEnd('.', ')');
+
+            if (DateTime.TryParseExact(t, new[] { "H:mm", "HH:mm" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+            {
+                time = eventDate.Date.Add(dt.TimeOfDay);
+                return true;
+            }
+
+            if (int.TryParse(t, out int slot) && slotMap != null && slotMap.TryGetValue(slot, out TimeSpan slotTime))
+            {
+                time = eventDate.Date.Add(slotTime);
+                return true;
+            }
+
+            return false;
         }
 
         public static TimeSlot FindMatchingTimeSlot(List<TimeSlot> timeSlots, Registration registration)

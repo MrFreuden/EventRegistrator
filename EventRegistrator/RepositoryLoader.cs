@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace EventRegistrator
 {
@@ -6,10 +7,20 @@ namespace EventRegistrator
     {
         private readonly string _path;
         private readonly object _lock = new();
+        private readonly JsonSerializerSettings _settings;
 
         public RepositoryLoader(string path)
         {
             _path = path;
+
+            _settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                TypeNameHandling = TypeNameHandling.Auto,
+                ContractResolver = new PrivateSetterContractResolver()
+            };
         }
 
         public UserRepository LoadData()
@@ -24,7 +35,7 @@ namespace EventRegistrator
                 {
                     var jsonString = File.ReadAllText(_path);
                     if (jsonString != null) Console.WriteLine("Загрузка успешна");
-                    return JsonConvert.DeserializeObject<UserRepository>(jsonString) ?? new UserRepository();
+                    return JsonConvert.DeserializeObject<UserRepository>(jsonString, _settings) ?? new UserRepository();
                 }
                 catch (Exception ex)
                 {
@@ -55,6 +66,26 @@ namespace EventRegistrator
                     Console.WriteLine($"Ошибка при сохранении данных: {ex.Message}");
                 }
             }
+        }
+    }
+
+    public class PrivateSetterContractResolver : DefaultContractResolver
+    {
+        protected override JsonProperty CreateProperty(System.Reflection.MemberInfo member, MemberSerialization memberSerialization)
+        {
+            var prop = base.CreateProperty(member, memberSerialization);
+
+            if (!prop.Writable)
+            {
+                var property = member as System.Reflection.PropertyInfo;
+                if (property != null)
+                {
+                    var hasPrivateSetter = property.GetSetMethod(true) != null;
+                    prop.Writable = hasPrivateSetter;
+                }
+            }
+
+            return prop;
         }
     }
 }

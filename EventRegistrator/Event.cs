@@ -1,26 +1,30 @@
-﻿using Telegram.Bot.Types;
+﻿using Newtonsoft.Json;
 
 namespace EventRegistrator
 {
+    [Serializable]
     public class Event
     {
-        public List<TimeSlot> _slots;
+        [JsonProperty]
+        private readonly List<TimeSlot> _slots;
 
-        public Event(Guid id, string title, long channelId, int messageId, string hashtagName, string templateText)
+        public Event(Guid id, string title, long channelId, int postId, string hashtagName, string templateText, int commentMessageId)
         {
             Id = id;
             Title = title;
             ChannelId = channelId;
-            MessageId = messageId;
+            PostId = postId;
             HashtagName = hashtagName;
             _slots = new List<TimeSlot>();
             TemplateText = templateText;
+            CommentMessageId = commentMessageId;
         }
 
         public Guid Id { get; }
         public string Title { get; private set; }
-        public long ChannelId { get; }
-        public int MessageId { get; }
+        public long ChannelId { get; set; }
+        public int CommentMessageId { get; set; }
+        public int PostId { get; set; }
         public int PrivateMessageId { get; set; }
         public string HashtagName { get; }
         public string TemplateText { get; set; }
@@ -62,6 +66,34 @@ namespace EventRegistrator
         public void RemoveSlot(TimeSlot slot)
         {
             _slots.Remove(slot);
+        }
+
+        public List<TimeSlot> GetSlots()
+        {
+            return _slots;
+        }
+
+        public void RemoveRegistrations(int messageId)
+        {
+            foreach (var slot in _slots)
+            {
+                var reg = slot.GetRegistration(messageId);
+                if (reg == default) continue;
+                slot.RemoveRegistration(reg);
+            }
+        }
+
+        public List<int> RemoveRegistrations(long userId)
+        {
+            var messageIds = new List<int>();
+            foreach (var slot in _slots)
+            {
+                var reg = slot.GetRegistration(userId);
+                if (reg == default) continue;
+                slot.RemoveRegistration(reg);
+                messageIds.Add(reg.MessageId);
+            }
+            return messageIds;
         }
     }
 }
