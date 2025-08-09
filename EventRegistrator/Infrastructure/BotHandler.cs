@@ -2,7 +2,7 @@
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 
-namespace EventRegistrator
+namespace EventRegistrator.Infrastructure
 {
     public class BotHandler : IUpdateHandler
     {

@@ -1,9 +1,11 @@
-﻿using System.Text;
+﻿using EventRegistrator.Application;
+using EventRegistrator.Domain.Models;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace EventRegistrator
+namespace EventRegistrator.Infrastructure
 {
     public class MessageSender
     {
@@ -13,6 +15,65 @@ namespace EventRegistrator
         {
             _bot = bot;
         }
+
+        public async Task<Message> SendMessage(MessageDTO message)
+        {
+            if (message.ButtonData.HasValue)
+            {
+                return await SendMessageWithButton(message, new InlineKeyboardButton(message.ButtonData.Value.Item1, message.ButtonData.Value.Item2));
+            }
+            else if (message.MessageToEditId.HasValue)
+            {
+                return await EditMessageText(message, message.MessageToEditId.Value);
+            }
+            else if (message.MessageToReplyId.HasValue)
+            {
+                return await ReplyToMessage(message, message.MessageToReplyId.Value);
+            }
+            else
+            {
+                return await _bot.SendMessage(message.ChatId, message.Text);
+            }
+        }
+
+        private async Task<Message> SendMessageWithButton(MessageDTO message, ReplyMarkup markup)
+        {
+            if (message.MessageToReplyId.HasValue)
+            {
+                return await ReplyToMessageWithButton(message, markup, message.MessageToReplyId.Value);
+            }
+            return await _bot.SendMessage(message.ChatId, message.Text, replyMarkup: markup);
+        }
+
+        private async Task<Message> EditMessageText(MessageDTO message, int messageToEditId)
+        {
+            return await _bot.EditMessageText(message.ChatId, messageToEditId, message.Text);
+        }
+
+        private async Task<Message> ReplyToMessage(MessageDTO message, int messageToReplyId)
+        {
+            var replyParams = new ReplyParameters() { MessageId = messageToReplyId };
+            return await _bot.SendMessage(message.ChatId, message.Text, replyParameters: replyParams);
+        }
+
+        private async Task<Message> ReplyToMessageWithButton(MessageDTO message, ReplyMarkup markup, int messageToReplyId)
+        {
+            var replyParams = new ReplyParameters() { MessageId = messageToReplyId };
+            return await _bot.SendMessage(message.ChatId, message.Text, replyParameters: replyParams, replyMarkup: markup);
+        }
+
+
+        public async Task LikeMessage(long targetChatId, int messageId)
+        {
+            await _bot.SetMessageReaction(targetChatId, messageId, new[] { new ReactionTypeEmoji() { Emoji = "👍" } });
+        }
+
+        public async Task UnLikeMessage(long targetChatId, int messageId)
+        {
+            await _bot.SetMessageReaction(targetChatId, messageId, []);
+        }
+
+
 
         public async Task<Message> SendTextTemplate(long chatId, string text)
         {
@@ -63,6 +124,7 @@ namespace EventRegistrator
             return await _bot.SendMessage(chatId, registrationInfo);
         }
 
+
         private string FormatRegistrationsInfo(Event lastEvent)
         {
             var slots = lastEvent.GetSlots() ?? new List<TimeSlot>();
@@ -108,16 +170,6 @@ namespace EventRegistrator
             }
 
             return new List<Registration>();
-        }
-
-        public async Task LikeMessage(long targetChatId, int id)
-        {
-            await _bot.SetMessageReaction(targetChatId, id, new[] { new ReactionTypeEmoji() { Emoji = "👍" } });
-        }
-
-        public async Task UnLikeMessage(long targetChatId, int id)
-        {
-            await _bot.SetMessageReaction(targetChatId, id, []);
         }
     }
 }

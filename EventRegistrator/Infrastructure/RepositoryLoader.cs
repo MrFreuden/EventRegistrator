@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace EventRegistrator
+namespace EventRegistrator.Infrastructure
 {
     public class RepositoryLoader
     {

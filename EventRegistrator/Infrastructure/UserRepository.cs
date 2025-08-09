@@ -1,9 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using EventRegistrator.Domain;
+using EventRegistrator.Domain.Models;
+using Newtonsoft.Json;
 
-namespace EventRegistrator
+namespace EventRegistrator.Infrastructure
 {
     [Serializable]
-    public class UserRepository
+    public class UserRepository : IUserRepository
     {
         [JsonProperty]
         private readonly Dictionary<long, UserAdmin> _users;

@@ -1,4 +1,5 @@
 ﻿using DotNetEnv;
+using EventRegistrator.Infrastructure;
 using System.Net;
 using Telegram.Bot;
 

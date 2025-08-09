@@ -1,4 +1,5 @@
-﻿using Sprache;
+﻿using EventRegistrator.Domain.Models;
+using Sprache;
 using System.Globalization;
 using System.Text.RegularExpressions;
 

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace EventRegistrator
+namespace EventRegistrator.Domain.Models
 {
     [Serializable]
     public class Event
