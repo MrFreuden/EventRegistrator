@@ -1,16 +1,22 @@
-﻿namespace EventRegistrator
+﻿using Newtonsoft.Json;
+
+namespace EventRegistrator
 {
+    [Serializable]
     public class Registration
     {
-        public Registration(long userId, string name, DateTime registrationTime)
+        [JsonConstructor]
+        public Registration(long userId, string name, DateTime registrationTime, int messageId)
         {
             UserId = userId;
             Name = name;
             RegistrationTime = registrationTime;
+            MessageId = messageId;
         }
 
         public long UserId { get; }
         public string Name { get; }
         public DateTime RegistrationTime { get; }
+        public int MessageId { get; }
     }
 }

@@ -32,13 +32,15 @@ namespace EventRegistrator
 
         public async Task<Message> SendFirstCommentAsAntwort(long chatId, int messageId, string templeText)
         {
+            var keyboard = new InlineKeyboardButton("Cancel", "Cancel");
             var r = new ReplyParameters() { MessageId = messageId };
-            return await _bot.SendMessage(chatId, templeText, replyParameters: r);
+            return await _bot.SendMessage(chatId, templeText, replyParameters: r, replyMarkup: keyboard);
         }
 
         public async Task<Message> EditFirstComment(long chatId, int messageId, string text)
         {
-            return await _bot.EditMessageText(chatId, messageId, text);
+            var keyboard = new InlineKeyboardButton("Cancel", "Cancel");
+            return await _bot.EditMessageText(chatId, messageId, text, replyMarkup: keyboard);
         }
 
         public async Task<Message> EditEventData(long chatId, int messageId, Event lastEvent)
@@ -63,7 +65,7 @@ namespace EventRegistrator
 
         private string FormatRegistrationsInfo(Event lastEvent)
         {
-            var slots = lastEvent._slots?.ToList() ?? new List<TimeSlot>();
+            var slots = lastEvent.GetSlots() ?? new List<TimeSlot>();
 
             if (slots.Count == 0)
                 return "Нет доступных временных слотов";
@@ -111,6 +113,11 @@ namespace EventRegistrator
         public async Task LikeMessage(long targetChatId, int id)
         {
             await _bot.SetMessageReaction(targetChatId, id, new[] { new ReactionTypeEmoji() { Emoji = "👍" } });
+        }
+
+        public async Task UnLikeMessage(long targetChatId, int id)
+        {
+            await _bot.SetMessageReaction(targetChatId, id, []);
         }
     }
 }

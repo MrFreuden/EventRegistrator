@@ -1,6 +1,4 @@
-﻿using System;
-using Telegram.Bot.Types;
-using static System.Net.Mime.MediaTypeNames;
+﻿using Telegram.Bot.Types;
 
 namespace EventRegistrator
 {
@@ -37,7 +35,7 @@ namespace EventRegistrator
                 }
                 else if (IsReplyToPostMessage(message))
                 {
-                    await ProssecOnEventRegistration(message);
+                    await ProcessOnEventRegistration(message);
                 }
             }
         }
@@ -53,12 +51,23 @@ namespace EventRegistrator
 
         private bool IsFromChannel(Message message)
         {
-            return message.ForwardFromChat != null;
+            var user = _userRepository.GetUserByTargetChat(message.Chat.Id);
+            if (message.ForwardFromChat != null)
+            {
+                return message.ForwardFromChat.Id == user.ChannelId;
+            }
+            return false;
         }
 
         private bool IsReplyToPostMessage(Message message)
         {
-            return message.ReplyToMessage != null;
+            var user = _userRepository.GetUserByTargetChat(message.Chat.Id);
+            if (message.ReplyToMessage != null && message.ReplyToMessage.ForwardFromChat != null)
+            {
+                return message.ReplyToMessage.ForwardFromChat.Id == user.ChannelId;
+            }
+            
+            return false;
         }
 
         private bool IsPrivateMessage(Message message)
@@ -92,29 +101,30 @@ namespace EventRegistrator
             await SaveRepositoryAsync();
         }
 
-        private async Task ProssecOnEventRegistration(Message message)
+        private async Task ProcessOnEventRegistration(Message message)
         {
             var user = _userRepository.GetUserByTargetChat(message.Chat.Id);
-            var lastEvent = user.Events.Last();
-            var reg = TimeSlotParser.ParseRegistrationMessage(message.Text, message.From.Id, message.Date);
-            var slot = TimeSlotParser.FindMatchingTimeSlot(lastEvent._slots, reg);
-            var result = slot.AddRegistration(reg);
+            var lastEvent = user.GetLastEvent();
+            var map = TimeSlotParser.GetMaper(lastEvent.TemplateText);
+            var regs = TimeSlotParser.ParseRegistrationMessage(message.Text, message.From.Id, message.Date, map, message.Id);
+           
+            var result = AddRegistrations(lastEvent.GetSlots(), regs);
             if (result == true)
             {
                 if (lastEvent.PrivateMessageId == default)
                 {
-                    var text = TimeSlotParser.UpdateTemplateText(user.TempleText, lastEvent._slots);
+                    var text = TimeSlotParser.UpdateTemplateText(user.TempleText, lastEvent.GetSlots());
                     lastEvent.TemplateText = text;
                     var m = await _messageSender.SendEventData(user.PrivateChatId, lastEvent);
                     lastEvent.PrivateMessageId = m.MessageId;
                 }
                 else
                 {
-                    var text = TimeSlotParser.UpdateTemplateText(user.TempleText, lastEvent._slots);
+                    var text = TimeSlotParser.UpdateTemplateText(user.TempleText, lastEvent.GetSlots());
                     lastEvent.TemplateText = text;
                     await _messageSender.EditEventData(user.PrivateChatId, lastEvent.PrivateMessageId, lastEvent);
                 }
-                await _messageSender.EditFirstComment(user.TargetChatId, lastEvent.MessageId, lastEvent.TemplateText);
+                await _messageSender.EditFirstComment(user.TargetChatId, lastEvent.CommentMessageId, lastEvent.TemplateText);
                 await _messageSender.LikeMessage(user.TargetChatId, message.Id);
 
                 await SaveRepositoryAsync();
@@ -125,15 +135,29 @@ namespace EventRegistrator
             }
         }
 
+        private bool AddRegistrations(List<TimeSlot> slots, List<Registration> registrations)
+        {
+            foreach (var registration in registrations)
+            {
+                var slot = TimeSlotParser.FindMatchingTimeSlot(slots, registration);
+                if (slot == default || slot.AddRegistration(registration) == false)
+                {
+                    return false;
+                }
+            }
+           
+            return true;
+        }
+
         private async Task ProcessNewEvent(Message message)
         {
             var user = _userRepository.GetUserByTargetChat(message.Chat.Id);
             var m = await _messageSender.SendFirstCommentAsAntwort(message.Chat.Id, message.Id, user.TempleText);
 
-            var newEvent = new Event(new Guid(), "SWS", message.ForwardFromChat.Id, m.MessageId, user.HashtagName, user.TempleText);
+            var newEvent = new Event(new Guid(), "SWS", message.ForwardFromChat.Id, message.Id, user.HashtagName, user.TempleText, m.MessageId);
             var slots = TimeSlotParser.ExtractTimeSlotsFromTemplate(user.TempleText, message.Date);
             newEvent.AddSlots(slots);
-            user.Events.Add(newEvent);
+            user.AddEvent(newEvent);
 
             await SaveRepositoryAsync();
         }
@@ -158,6 +182,32 @@ namespace EventRegistrator
         private async Task SaveRepositoryAsync()
         {
             await _repositoryLoader.SaveDataAsync(_userRepository);
+        }
+
+        public async Task ProcessEditMessage(Message message)
+        {
+            if (IsMessageFromTargetChat(message))
+            {
+                if (IsReplyToPostMessage(message))
+                {
+                    var user = _userRepository.GetUserByTargetChat(message.Chat.Id);
+                    var lastEvent = user.GetLastEvent();
+                    lastEvent.RemoveRegistrations(message.Id);
+                    await _messageSender.UnLikeMessage(user.TargetChatId, message.Id);
+
+                    await _messageSender.EditEventData(user.PrivateChatId, lastEvent.PrivateMessageId, lastEvent);
+
+                    var text = TimeSlotParser.UpdateTemplateText(user.TempleText, lastEvent.GetSlots());
+                    lastEvent.TemplateText = text;
+                    await _messageSender.EditFirstComment(user.TargetChatId, lastEvent.CommentMessageId, lastEvent.TemplateText);
+                    await ProcessOnEventRegistration(message);
+                }
+            }
+        }
+
+        private async Task UpdateMessages()
+        {
+
         }
     }
 }

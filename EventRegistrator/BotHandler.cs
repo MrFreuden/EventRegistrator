@@ -22,9 +22,9 @@ namespace EventRegistrator
             {
                 { Message: { } message } => _messageHandler.ProcessMessage(message),
                 { CallbackQuery: { } callbackQuery } => _callbackQueryHandler.ProcessCallbackQuery(callbackQuery),
+                { EditedMessage: { } message } => _messageHandler.ProcessEditMessage(message),
                 //{ MyChatMember: { } myChatMember } => _messageHandler.ProcessChatMember(myChatMember),
                 //{ ChannelPost: { } post } => _updateProcessor.ProcessPost(post),
-                //{ EditedMessage: { } message } => _updateProcessor.ProcessEditMessage(message),
                 //{ InlineQuery: { } inlineQuery } => OnInlineQuery(inlineQuery),
                 //{ ChosenInlineResult: { } chosenInlineResult } => OnChosenInlineResult(chosenInlineResult),
                 _ => UnknownUpdateHandlerAsync(update)

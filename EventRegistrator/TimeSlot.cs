@@ -1,7 +1,11 @@
-﻿namespace EventRegistrator
+﻿using Newtonsoft.Json;
+
+namespace EventRegistrator
 {
+    [Serializable]
     public class TimeSlot
     {
+        [JsonProperty]
         private readonly List<Registration> _currentRegistrations;
         public int MaxCapacity { get; private set; }
         public DateTime Time { get; private set; }
@@ -84,6 +88,16 @@
         private bool HasUser(long userId)
         {
             return _currentRegistrations.FirstOrDefault(r => r.UserId == userId) != null;
+        }
+
+        public Registration GetRegistration(int messageId)
+        {
+            return _currentRegistrations.FirstOrDefault(r => r.MessageId == messageId);
+        }
+
+        public Registration GetRegistration(long userId)
+        {
+            return _currentRegistrations.FirstOrDefault(r => r.UserId == userId);
         }
     }
 }
