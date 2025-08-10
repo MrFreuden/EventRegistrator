@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Infrastructure;
+﻿using EventRegistrator.Domain.Models;
+using EventRegistrator.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
