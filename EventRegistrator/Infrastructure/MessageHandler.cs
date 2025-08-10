@@ -15,14 +15,14 @@ namespace EventRegistrator.Infrastructure
         {
             _userRepository = userRepository;
             _messageSender = messageSender;
-            _privateMessageHandler = new PrivateMessageHandler();
-            _targetChatMessageHandler = new TargetChatMessageHandler();
+            _privateMessageHandler = new PrivateMessageHandler(userRepository);
+            _targetChatMessageHandler = new TargetChatMessageHandler(userRepository);
             _repositoryLoader = new RepositoryLoader(EnvLoader.GetDataPath());
         }
 
         public async Task ProcessMessage(Message message)
         {
-            MessageDTO messageDTO;
+            MessageDTO messageDTO = null;
             if (IsPrivateMessage(message))
             {
                 messageDTO = await _privateMessageHandler.Handle(message);
@@ -30,11 +30,13 @@ namespace EventRegistrator.Infrastructure
             else if (IsMessageFromTargetChat(message))
             {
                 await ProcessMessagesAsync(await _targetChatMessageHandler.Handle(message));
+                return;
             }
             else
             {
                 messageDTO = new MessageDTO { ChatId = message.Chat.Id, Text = Constants.Error };
             }
+            await _messageSender.SendMessage(messageDTO);
             await SaveRepositoryAsync();
         }
         private async Task ProcessMessagesAsync(List<MessageDTO> messages)

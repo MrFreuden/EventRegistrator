@@ -54,5 +54,10 @@ namespace EventRegistrator.Infrastructure
         {
             _users.Clear();
         }
+
+        public List<UserAdmin> GetAllUsers()
+        {
+            return _users.Values.ToList();
+        }
     }
 }

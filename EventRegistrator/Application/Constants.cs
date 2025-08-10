@@ -12,5 +12,6 @@ namespace EventRegistrator.Application
         public const string UnknownCommand = "Невiдома команда";
         public const string Error = "Помилка";
         public const string Cancel = "Cancel";
+        public const string AskForNewTemplate = "Введiть новий шаблон";
     }
 }

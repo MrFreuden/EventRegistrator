@@ -9,6 +9,11 @@ namespace EventRegistrator.Application
     {
         private readonly IUserRepository _userRepository;
 
+        public TargetChatMessageHandler(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
+
         public async Task<List<MessageDTO>> HandleEdit(Message message)
         {
             var messages = new List<MessageDTO>();
@@ -30,7 +35,7 @@ namespace EventRegistrator.Application
                 var eventDataPrivateUpdateMessage = new MessageDTO
                 {
                     ChatId = user.PrivateChatId,
-                    Text = FormatRegistrationsInfo(lastEvent),
+                    Text = EventFormatter.FormatRegistrationsInfo(lastEvent),
                     MessageToEditId = lastEvent.PrivateMessageId,
                 };
 
@@ -88,7 +93,7 @@ namespace EventRegistrator.Application
                     var eventDataMessage = new MessageDTO
                     {
                         ChatId = user.PrivateChatId,
-                        Text = FormatRegistrationsInfo(lastEvent),
+                        Text = EventFormatter.FormatRegistrationsInfo(lastEvent),
                         SaveMessageIdCallback = id => { lastEvent.PrivateMessageId = id; }
                     };
                     messages.Add(eventDataMessage);
@@ -113,6 +118,7 @@ namespace EventRegistrator.Application
                     ChatId = user.TargetChatId,
                     Text = lastEvent.TemplateText,
                     MessageToEditId = lastEvent.CommentMessageId,
+                    ButtonData = (Constants.Cancel, Constants.Cancel),
                 };
 
                 var likeMessage = new MessageDTO
@@ -194,53 +200,6 @@ namespace EventRegistrator.Application
             }
 
             return false;
-        }
-
-        private string FormatRegistrationsInfo(Event lastEvent)
-        {
-            var slots = lastEvent.GetSlots() ?? new List<TimeSlot>();
-
-            if (slots.Count == 0)
-                return "Нет доступных временных слотов";
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"Запись на: {lastEvent.Title}");
-            sb.AppendLine();
-
-            slots = slots.OrderBy(s => s.Time).ToList();
-
-            foreach (var slot in slots)
-            {
-                sb.AppendLine($"{slot.Time:HH:mm}");
-
-                var registrations = GetRegistrationsFromTimeSlot(slot);
-
-                if (registrations.Any())
-                {
-                    foreach (var registration in registrations)
-                    {
-                        sb.AppendLine(registration.Name);
-                    }
-                }
-
-                sb.AppendLine();
-            }
-
-            return sb.ToString();
-        }
-
-        private List<Registration> GetRegistrationsFromTimeSlot(TimeSlot slot)
-        {
-            var registrationsField = typeof(TimeSlot).GetField("_currentRegistrations",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            if (registrationsField != null)
-            {
-                var registrations = registrationsField.GetValue(slot) as List<Registration>;
-                return registrations ?? new List<Registration>();
-            }
-
-            return new List<Registration>();
         }
     }
 }

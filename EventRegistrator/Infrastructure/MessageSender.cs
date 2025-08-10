@@ -18,7 +18,12 @@ namespace EventRegistrator.Infrastructure
 
         public async Task<Message> SendMessage(MessageDTO message)
         {
-            if (message.ButtonData.HasValue)
+            if (message.Like || message.UnLike)
+            {
+                await SendReaction(message);
+                return new Message();
+            }
+            else if (message.ButtonData.HasValue)
             {
                 return await SendMessageWithButton(message, new InlineKeyboardButton(message.ButtonData.Value.Item1, message.ButtonData.Value.Item2));
             }
@@ -29,11 +34,6 @@ namespace EventRegistrator.Infrastructure
             else if (message.MessageToReplyId.HasValue)
             {
                 return await ReplyToMessage(message, message.MessageToReplyId.Value);
-            }
-            else if (message.Like || message.UnLike)
-            {
-                await SendReaction(message);
-                return new Message();
             }
             else
             {
@@ -47,12 +47,21 @@ namespace EventRegistrator.Infrastructure
             {
                 return await ReplyToMessageWithButton(message, markup, message.MessageToReplyId.Value);
             }
+            if (message.MessageToEditId.HasValue)
+            {
+                return await EditMessageText(message, message.MessageToEditId.Value, new InlineKeyboardButton(message.ButtonData.Value.Item1, message.ButtonData.Value.Item2));
+            }
             return await _bot.SendMessage(message.ChatId, message.Text, replyMarkup: markup);
         }
 
         private async Task<Message> EditMessageText(MessageDTO message, int messageToEditId)
         {
             return await _bot.EditMessageText(message.ChatId, messageToEditId, message.Text);
+        }
+
+        private async Task<Message> EditMessageText(MessageDTO message, int messageToEditId, InlineKeyboardMarkup markup)
+        {
+            return await _bot.EditMessageText(message.ChatId, messageToEditId, message.Text, replyMarkup: markup);
         }
 
         private async Task<Message> ReplyToMessage(MessageDTO message, int messageToReplyId)

@@ -8,6 +8,11 @@ namespace EventRegistrator.Application
     {
         private readonly IUserRepository _userRepository;
 
+        public PrivateMessageHandler(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
+
         public async Task<MessageDTO> Handle(Message message)
         {
             if (IsCommand(message))
@@ -16,7 +21,7 @@ namespace EventRegistrator.Application
             }
             else if (IsUserAsked(message))
             {
-                return await ProcessEditTemplateText(message);
+                return ProcessEditTemplateText(message);
             }
             return new MessageDTO { ChatId = message.Chat.Id, Text = Constants.Error };
         }
@@ -31,12 +36,15 @@ namespace EventRegistrator.Application
                 case "/settings":
                     var text = _userRepository.GetUser(message.Chat.Id).TempleText;
                     return new MessageDTO { ChatId = message.Chat.Id, Text = text };
+                case "/admin":
+                    var text2 = EventFormatter.GetAllUsersInfo(_userRepository as UserRepository);
+                    return new MessageDTO { ChatId = message.Chat.Id, Text = text2 };
                 default:
                     return new MessageDTO { ChatId = message.Chat.Id, Text = Constants.UnknownCommand };
             }
         }
 
-        private async Task<MessageDTO> ProcessEditTemplateText(Message message)
+        private MessageDTO ProcessEditTemplateText(Message message)
         {
             var user = _userRepository.GetUser(message.Chat.Id);
             user.IsAsked = false;
