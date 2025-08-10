@@ -9,5 +9,6 @@
         public (string, string)? ButtonData { get; set; }
         public bool Like { get; set; }
         public bool UnLike { get; set; }
+        public Action<int> SaveMessageIdCallback { get; set; }
     }
 }

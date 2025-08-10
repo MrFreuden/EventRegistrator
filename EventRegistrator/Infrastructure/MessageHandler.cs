@@ -29,16 +29,23 @@ namespace EventRegistrator.Infrastructure
             }
             else if (IsMessageFromTargetChat(message))
             {
-                messageDTO = await _targetChatMessageHandler.Handle(message);
+                await ProcessMessagesAsync(await _targetChatMessageHandler.Handle(message));
             }
             else
             {
                 messageDTO = new MessageDTO { ChatId = message.Chat.Id, Text = Constants.Error };
             }
             await SaveRepositoryAsync();
-            var m = await _messageSender.SendMessage(messageDTO);
         }
+        private async Task ProcessMessagesAsync(List<MessageDTO> messages)
+        {
+            foreach (var message in messages)
+            {
+                var sentMessage = await _messageSender.SendMessage(message);
 
+                message.SaveMessageIdCallback?.Invoke(sentMessage.MessageId);
+            }
+        }
         public async Task ProcessEditMessage(Message message)
         {
             if (IsMessageFromTargetChat(message))

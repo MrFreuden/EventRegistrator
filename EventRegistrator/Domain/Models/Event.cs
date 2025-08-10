@@ -8,7 +8,7 @@ namespace EventRegistrator.Domain.Models
         [JsonProperty]
         private readonly List<TimeSlot> _slots;
 
-        public Event(Guid id, string title, long channelId, int postId, string hashtagName, string templateText, int commentMessageId)
+        public Event(Guid id, string title, long channelId, int postId, string hashtagName, string templateText)
         {
             Id = id;
             Title = title;
@@ -17,7 +17,6 @@ namespace EventRegistrator.Domain.Models
             HashtagName = hashtagName;
             _slots = new List<TimeSlot>();
             TemplateText = templateText;
-            CommentMessageId = commentMessageId;
         }
 
         public Guid Id { get; }
