@@ -8,25 +8,25 @@ namespace EventRegistrator.Domain.Models
         [JsonProperty]
         private readonly List<TimeSlot> _slots;
 
-        public Event(Guid id, string title, long channelId, int postId, string hashtagName, string templateText)
+        public Event(string title, int postId, long targetChatId, string hashtagName)
         {
-            Id = id;
+            Id = new Guid();
             Title = title;
-            ChannelId = channelId;
             PostId = postId;
+            TargetChatId = targetChatId;
             HashtagName = hashtagName;
             _slots = new List<TimeSlot>();
-            TemplateText = templateText;
         }
 
         public Guid Id { get; }
-        public string Title { get; private set; }
-        public long ChannelId { get; set; }
-        public int CommentMessageId { get; set; }
-        public int PostId { get; set; }
-        public int PrivateMessageId { get; set; }
+        public string Title { get; }
+        public long TargetChatId { get; }
         public string HashtagName { get; }
+        public int PostId { get; }
+        public int CommentMessageId { get; set; }
+        public int PrivateMessageId { get; set; }
         public string TemplateText { get; set; }
+       
 
         public void AddSlot(TimeSlot slot)
         {

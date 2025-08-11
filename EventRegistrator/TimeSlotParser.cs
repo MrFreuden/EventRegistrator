@@ -1,5 +1,4 @@
 ﻿using EventRegistrator.Domain.Models;
-using Sprache;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -61,7 +60,7 @@ namespace EventRegistrator
                 var match = TemplateRegex.Match(line);
                 if (match.Success)
                 {
-                    string timeStr = match.Groups[1].Value.Replace('.', ':');    
+                    string timeStr = match.Groups[1].Value.Replace('.', ':');
 
                     if (TimeSpan.TryParse(timeStr, out TimeSpan time))
                     {

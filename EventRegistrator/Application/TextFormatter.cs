@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EventRegistrator.Application
 {
-    public static class EventFormatter
+    public static class TextFormatter
     {
         public static string FormatRegistrationsInfo(Event lastEvent)
         {
@@ -70,61 +70,56 @@ namespace EventRegistrator.Application
             {
                 sb.AppendLine($"===== Пользователь ID: {user.Id} =====");
                 sb.AppendLine($"Приватный чат ID: {user.PrivateChatId}");
-                sb.AppendLine($"Целевой чат ID: {user.TargetChatId}");
-                sb.AppendLine($"Канал ID: {user.ChannelId}");
-                sb.AppendLine($"Название канала: {user.ChannelName ?? "Не указано"}");
-                sb.AppendLine($"Хэштег: {user.HashtagName ?? "Не указано"}");
                 sb.AppendLine($"Режим ожидания ввода: {(user.IsAsked ? "Да" : "Нет")}");
                 
-                sb.AppendLine("Шаблон сообщения:");
-                sb.AppendLine(user.TempleText);
-                sb.AppendLine();
-                
-                // Получаем информацию о событиях пользователя через рефлексию
-                // (так как _events приватное поле)
-                var eventsField = typeof(UserAdmin).GetField("_events", 
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
-                if (eventsField != null)
+                // Получаем событие пользователя через доступный метод GetLastEvent
+                try
                 {
-                    var events = eventsField.GetValue(user) as List<Event>;
-                    if (events != null && events.Any())
+                    var lastEvent = user.GetLastEvent();
+                    if (lastEvent != null)
                     {
-                        sb.AppendLine($"События ({events.Count}):");
-                        foreach (var evt in events)
+                        sb.AppendLine();
+                        sb.AppendLine($"Последнее событие:");
+                        sb.AppendLine($"  - ID: {lastEvent.Id}");
+                        sb.AppendLine($"    Название: {lastEvent.Title}");
+                        sb.AppendLine($"    Канал ID: {lastEvent.TargetChatId}");
+                        sb.AppendLine($"    Хэштег: {lastEvent.HashtagName}");
+                        sb.AppendLine($"    Пост ID: {lastEvent.PostId}");
+                        sb.AppendLine($"    ID сообщения в привате: {lastEvent.PrivateMessageId}");
+                        sb.AppendLine($"    ID сообщения-комментария: {lastEvent.CommentMessageId}");
+                        
+                        var slots = lastEvent.GetSlots();
+                        if (slots != null && slots.Any())
                         {
-                            sb.AppendLine($"  - ID: {evt.Id}");
-                            sb.AppendLine($"    Название: {evt.Title}");
-                            sb.AppendLine($"    Канал ID: {evt.ChannelId}");
-                            sb.AppendLine($"    Пост ID: {evt.PostId}");
-                            sb.AppendLine($"    ID сообщения в привате: {evt.PrivateMessageId}");
-                            sb.AppendLine($"    ID сообщения-комментария: {evt.CommentMessageId}");
-                            
-                            var slots = evt.GetSlots();
-                            if (slots != null && slots.Any())
+                            sb.AppendLine($"    Временные слоты ({slots.Count}):");
+                            foreach (var slot in slots.OrderBy(s => s.Time))
                             {
-                                sb.AppendLine($"    Временные слоты ({slots.Count}):");
-                                foreach (var slot in slots.OrderBy(s => s.Time))
+                                var regs = GetRegistrationsFromTimeSlot(slot);
+                                sb.AppendLine($"      - {slot.Time:HH:mm} (Занято: {slot.CurrentRegistrationCount}/{slot.MaxCapacity})");
+                                
+                                if (regs.Any())
                                 {
-                                    var regs = GetRegistrationsFromTimeSlot(slot);
-                                    sb.AppendLine($"      - {slot.Time:HH:mm} (Занято: {slot.CurrentRegistrationCount}/{slot.MaxCapacity})");
-                                    
-                                    if (regs.Any())
+                                    foreach (var reg in regs)
                                     {
-                                        foreach (var reg in regs)
-                                        {
-                                            sb.AppendLine($"        * {reg.Name} (ID: {reg.UserId}, Сообщение: {reg.MessageId})");
-                                        }
+                                        sb.AppendLine($"        * {reg.Name} (ID: {reg.UserId}, Сообщение: {reg.MessageId})");
                                     }
                                 }
                             }
-                            sb.AppendLine();
+                        }
+                        else
+                        {
+                            sb.AppendLine("    У события нет временных слотов.");
                         }
                     }
                     else
                     {
                         sb.AppendLine("У пользователя нет событий.");
                     }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Обработка случая, когда у пользователя нет событий (_events пуст)
+                    sb.AppendLine("У пользователя нет событий.");
                 }
                 
                 sb.AppendLine();

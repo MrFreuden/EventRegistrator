@@ -1,4 +1,5 @@
 ﻿using EventRegistrator.Domain;
+using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure;
 using Telegram.Bot.Types;
 
@@ -13,52 +14,53 @@ namespace EventRegistrator.Application
             _userRepository = userRepository;
         }
 
-        public async Task<MessageDTO> Handle(Message message)
+        public AntwortDTO Handle(MessageDTO message)
         {
             if (IsCommand(message))
             {
-                return await ProcessPrivateMessageCommand(message);
+                return ProcessPrivateMessageCommand(message);
             }
             else if (IsUserAsked(message))
             {
                 return ProcessEditTemplateText(message);
             }
-            return new MessageDTO { ChatId = message.Chat.Id, Text = Constants.Error };
+            return new AntwortDTO { ChatId = message.ChatId, Text = Constants.Error };
         }
 
-        private async Task<MessageDTO> ProcessPrivateMessageCommand(Message message)
+        private AntwortDTO ProcessPrivateMessageCommand(MessageDTO message)
         {
             switch (message.Text)
             {
                 case "/start":
-                    _userRepository.AddUser(message.Chat.Id);
-                    return new MessageDTO { ChatId = message.Chat.Id, Text = Constants.Greetings };
+                    _userRepository.AddUser(message.ChatId);
+                    return new AntwortDTO { ChatId = message.ChatId, Text = Constants.Greetings };
                 case "/settings":
-                    var text = _userRepository.GetUser(message.Chat.Id).TempleText;
-                    return new MessageDTO { ChatId = message.Chat.Id, Text = text };
+                    var text = _userRepository.GetUser(message.ChatId).GetTargetChat().GetHashtagByName("sws").TemplateText;
+                    return new AntwortDTO { ChatId = message.ChatId, Text = text };
                 case "/admin":
-                    var text2 = EventFormatter.GetAllUsersInfo(_userRepository as UserRepository);
-                    return new MessageDTO { ChatId = message.Chat.Id, Text = text2 };
+                    var text2 = TextFormatter.GetAllUsersInfo(_userRepository as UserRepository);
+                    return new AntwortDTO { ChatId = message.ChatId, Text = text2 };
                 default:
-                    return new MessageDTO { ChatId = message.Chat.Id, Text = Constants.UnknownCommand };
+                    return new AntwortDTO { ChatId = message.ChatId, Text = Constants.UnknownCommand };
             }
         }
 
-        private MessageDTO ProcessEditTemplateText(Message message)
+        private AntwortDTO ProcessEditTemplateText(MessageDTO message)
         {
-            var user = _userRepository.GetUser(message.Chat.Id);
+            var user = _userRepository.GetUser(message.ChatId);
             user.IsAsked = false;
-            user.TempleText = message.Text;
-            return new MessageDTO { ChatId = message.Chat.Id, Text = user.TempleText };
+            var hashtag = user.GetTargetChat().GetHashtagByName("sws");
+            hashtag.EditTemplateText(message.Text);
+            return new AntwortDTO { ChatId = message.ChatId, Text = hashtag.TemplateText };
         }
 
-        private bool IsUserAsked(Message message)
+        private bool IsUserAsked(MessageDTO message)
         {
-            var user = _userRepository.GetUser(message.Chat.Id);
+            var user = _userRepository.GetUser(message.ChatId);
             return user.IsAsked;
         }
 
-        private bool IsCommand(Message message)
+        private bool IsCommand(MessageDTO message)
         {
             return message.Text.StartsWith('/');
         }

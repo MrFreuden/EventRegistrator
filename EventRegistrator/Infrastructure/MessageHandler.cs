@@ -22,24 +22,25 @@ namespace EventRegistrator.Infrastructure
 
         public async Task ProcessMessage(Message message)
         {
-            MessageDTO messageDTO = null;
+            AntwortDTO messageDTO = null;
+            var m = MessageMapper.Map(message);
             if (IsPrivateMessage(message))
             {
-                messageDTO = await _privateMessageHandler.Handle(message);
+                messageDTO = _privateMessageHandler.Handle(m);
             }
             else if (IsMessageFromTargetChat(message))
             {
-                await ProcessMessagesAsync(await _targetChatMessageHandler.Handle(message));
+                await ProcessMessagesAsync(_targetChatMessageHandler.Handle(m));
                 return;
             }
             else
             {
-                messageDTO = new MessageDTO { ChatId = message.Chat.Id, Text = Constants.Error };
+                messageDTO = new AntwortDTO { ChatId = message.Chat.Id, Text = Constants.Error };
             }
             await _messageSender.SendMessage(messageDTO);
             await SaveRepositoryAsync();
         }
-        private async Task ProcessMessagesAsync(List<MessageDTO> messages)
+        private async Task ProcessMessagesAsync(List<AntwortDTO> messages)
         {
             foreach (var message in messages)
             {
@@ -50,9 +51,10 @@ namespace EventRegistrator.Infrastructure
         }
         public async Task ProcessEditMessage(Message message)
         {
+            var m = MessageMapper.Map(message);
             if (IsMessageFromTargetChat(message))
             {
-                await _targetChatMessageHandler.HandleEdit(message);
+                _targetChatMessageHandler.HandleEdit(m);
             }
         }
 
@@ -64,7 +66,7 @@ namespace EventRegistrator.Infrastructure
         private bool IsMessageFromTargetChat(Message message)
         {
             var user = _userRepository.GetUserByTargetChat(message.Chat.Id);
-            return user.TargetChatId == message.Chat.Id;
+            return user != null;
         }
 
         private async Task SaveRepositoryAsync()

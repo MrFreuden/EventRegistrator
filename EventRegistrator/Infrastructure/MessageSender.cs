@@ -16,7 +16,7 @@ namespace EventRegistrator.Infrastructure
             _bot = bot;
         }
 
-        public async Task<Message> SendMessage(MessageDTO message)
+        public async Task<Message> SendMessage(AntwortDTO message)
         {
             if (message.Like || message.UnLike)
             {
@@ -41,7 +41,7 @@ namespace EventRegistrator.Infrastructure
             }
         }
 
-        private async Task<Message> SendMessageWithButton(MessageDTO message, ReplyMarkup markup)
+        private async Task<Message> SendMessageWithButton(AntwortDTO message, ReplyMarkup markup)
         {
             if (message.MessageToReplyId.HasValue)
             {
@@ -54,29 +54,29 @@ namespace EventRegistrator.Infrastructure
             return await _bot.SendMessage(message.ChatId, message.Text, replyMarkup: markup);
         }
 
-        private async Task<Message> EditMessageText(MessageDTO message, int messageToEditId)
+        private async Task<Message> EditMessageText(AntwortDTO message, int messageToEditId)
         {
             return await _bot.EditMessageText(message.ChatId, messageToEditId, message.Text);
         }
 
-        private async Task<Message> EditMessageText(MessageDTO message, int messageToEditId, InlineKeyboardMarkup markup)
+        private async Task<Message> EditMessageText(AntwortDTO message, int messageToEditId, InlineKeyboardMarkup markup)
         {
             return await _bot.EditMessageText(message.ChatId, messageToEditId, message.Text, replyMarkup: markup);
         }
 
-        private async Task<Message> ReplyToMessage(MessageDTO message, int messageToReplyId)
+        private async Task<Message> ReplyToMessage(AntwortDTO message, int messageToReplyId)
         {
             var replyParams = new ReplyParameters() { MessageId = messageToReplyId };
             return await _bot.SendMessage(message.ChatId, message.Text, replyParameters: replyParams);
         }
 
-        private async Task<Message> ReplyToMessageWithButton(MessageDTO message, ReplyMarkup markup, int messageToReplyId)
+        private async Task<Message> ReplyToMessageWithButton(AntwortDTO message, ReplyMarkup markup, int messageToReplyId)
         {
             var replyParams = new ReplyParameters() { MessageId = messageToReplyId };
             return await _bot.SendMessage(message.ChatId, message.Text, replyParameters: replyParams, replyMarkup: markup);
         }
 
-        public async Task SendReaction(MessageDTO message)
+        public async Task SendReaction(AntwortDTO message)
         {
             if (message.Like)
             {

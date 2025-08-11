@@ -42,7 +42,7 @@ namespace EventRegistrator.Infrastructure
 
         public UserAdmin GetUserByTargetChat(long targetChatId)
         {
-            var user = _users.FirstOrDefault(u => u.Value.TargetChatId == targetChatId).Value;
+            var user = _users.FirstOrDefault(u => u.Value.ContainsTargetChat(targetChatId)).Value;
             if (user != null)
             {
                 return user;
