@@ -43,7 +43,7 @@ namespace EventRegistrator.Application
         }
 
         
-        public List<Response> Handle(MessageDTO message)
+        public async Task<List<Response>> Handle(MessageDTO message)
         {
             if (IsFromChannel(message) && IsHasHashtag(message))
             {

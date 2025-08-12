@@ -1,58 +1,39 @@
 ﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
-using EventRegistrator.Infrastructure;
-using Telegram.Bot.Types;
 
 namespace EventRegistrator.Application
 {
     public class PrivateMessageHandler
     {
         private readonly IUserRepository _userRepository;
+        private readonly Dictionary<string, Func<ICommand>> _commands;
 
         public PrivateMessageHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
+            _commands = new Dictionary<string, Func<ICommand>>
+            {
+                { "/start", () => new StartCommand(_userRepository) },
+                { "/settings", () => new SettingsCommand() },
+                { "/admin", () => new AdminCommand(_userRepository) }
+            };
         }
 
-        public Response Handle(MessageDTO message)
+        public async Task<List<Response>> Handle(MessageDTO message)
         {
+            if (IsUserAsked(message))
+            {
+                var editTemplateTextState = new EditTemplateTextState(_userRepository);
+                return [await editTemplateTextState.Handle(message)];
+            }
             if (IsCommand(message))
             {
-                return ProcessPrivateMessageCommand(message);
+                var defaultState = new DefaultState(_commands);
+                return [await defaultState.Handle(message)];
             }
-            else if (IsUserAsked(message))
-            {
-                return ProcessEditTemplateText(message);
-            }
-            return new Response { ChatId = message.ChatId, Text = Constants.Error };
-        }
 
-        private Response ProcessPrivateMessageCommand(MessageDTO message)
-        {
-            switch (message.Text)
-            {
-                case "/start":
-                    _userRepository.AddUser(message.ChatId);
-                    return new Response { ChatId = message.ChatId, Text = Constants.Greetings };
-                case "/settings":
-                    var text = _userRepository.GetUser(message.ChatId).GetTargetChat().GetHashtagByName("sws").TemplateText;
-                    return new Response { ChatId = message.ChatId, Text = text };
-                case "/admin":
-                    var text2 = TextFormatter.GetAllUsersInfo(_userRepository as UserRepository);
-                    return new Response { ChatId = message.ChatId, Text = text2 };
-                default:
-                    return new Response { ChatId = message.ChatId, Text = Constants.UnknownCommand };
-            }
-        }
-
-        private Response ProcessEditTemplateText(MessageDTO message)
-        {
-            var user = _userRepository.GetUser(message.ChatId);
-            user.IsAsked = false;
-            var hashtag = user.GetTargetChat().GetHashtagByName("sws");
-            hashtag.EditTemplateText(message.Text);
-            return new Response { ChatId = message.ChatId, Text = hashtag.TemplateText };
+            return [new Response { ChatId = message.ChatId, Text = Constants.Error }];
         }
 
         private bool IsUserAsked(MessageDTO message)

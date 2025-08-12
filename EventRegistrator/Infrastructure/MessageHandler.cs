@@ -41,15 +41,7 @@ namespace EventRegistrator.Infrastructure
             await _messageSender.SendMessage(response);
             await SaveRepositoryAsync();
         }
-        private async Task ProcessMessagesAsync(List<Response> messages)
-        {
-            foreach (var message in messages)
-            {
-                var sentMessage = await _messageSender.SendMessage(message);
 
-                message.SaveMessageIdCallback?.Invoke(sentMessage.MessageId);
-            }
-        }
         public async Task ProcessEditMessage(Message message)
         {
             var m = MessageMapper.Map(message);
@@ -59,15 +51,14 @@ namespace EventRegistrator.Infrastructure
             }
         }
 
-        private bool IsPrivateMessage(Message message)
+        private async Task ProcessMessagesAsync(List<Response> messages)
         {
-            return message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private;
-        }
+            foreach (var message in messages)
+            {
+                var sentMessage = await _messageSender.SendMessage(message);
 
-        private bool IsMessageFromTargetChat(Message message)
-        {
-            var user = _userRepository.GetUserByTargetChat(message.Chat.Id);
-            return user != null;
+                message.SaveMessageIdCallback?.Invoke(sentMessage.MessageId);
+            }
         }
 
         private async Task SaveRepositoryAsync()
