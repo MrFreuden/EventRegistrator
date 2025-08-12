@@ -4,7 +4,7 @@ using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application
 {
-    public class PrivateMessageHandler
+    public class PrivateMessageHandler : IHandler
     {
         private readonly IUserRepository _userRepository;
         private readonly Dictionary<string, Func<ICommand>> _commands;
@@ -20,7 +20,7 @@ namespace EventRegistrator.Application
             };
         }
 
-        public async Task<List<Response>> Handle(MessageDTO message)
+        public async Task<List<Response>> HandleAsync(MessageDTO message)
         {
             if (IsUserAsked(message))
             {
@@ -36,6 +36,12 @@ namespace EventRegistrator.Application
             return [new Response { ChatId = message.ChatId, Text = Constants.Error }];
         }
 
+        public bool CanHandle(MessageDTO message)
+        {
+            //var v = IsCommand(message) == false ? IsUserAsked(message) : true;
+            return IsPrivateMessage(message);
+        }
+
         private bool IsUserAsked(MessageDTO message)
         {
             var user = _userRepository.GetUser(message.ChatId);
@@ -45,6 +51,11 @@ namespace EventRegistrator.Application
         private bool IsCommand(MessageDTO message)
         {
             return message.Text.StartsWith('/');
+        }
+
+        private bool IsPrivateMessage(MessageDTO message)
+        {
+            return message.ChatId > 0;
         }
     }
 }

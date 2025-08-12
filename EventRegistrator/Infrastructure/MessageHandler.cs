@@ -11,6 +11,7 @@ namespace EventRegistrator.Infrastructure
         private readonly PrivateMessageHandler _privateMessageHandler;
         private readonly TargetChatMessageHandler _targetChatMessageHandler; 
         private readonly RepositoryLoader _repositoryLoader;
+        private readonly MessageRouter _messageRouter;
 
         public MessageHandler(UserRepository userRepository, MessageSender messageSender)
         {
@@ -19,36 +20,20 @@ namespace EventRegistrator.Infrastructure
             _privateMessageHandler = new PrivateMessageHandler(userRepository);
             _targetChatMessageHandler = new TargetChatMessageHandler(userRepository);
             _repositoryLoader = new RepositoryLoader(EnvLoader.GetDataPath());
+            _messageRouter = new MessageRouter([_privateMessageHandler, _targetChatMessageHandler]);
         }
 
         public async Task ProcessMessage(Message message)
         {
-            Response response = null;
             var messageDto = MessageMapper.Map(message);
-            if (IsPrivateMessage(message))
-            {
-                response = _privateMessageHandler.Handle(messageDto);
-            }
-            else if (IsMessageFromTargetChat(message))
-            {
-                await ProcessMessagesAsync(_targetChatMessageHandler.Handle(messageDto));
-                return;
-            }
-            else
-            {
-                response = new Response { ChatId = message.Chat.Id, Text = Constants.Error };
-            }
-            await _messageSender.SendMessage(response);
+            var response = _messageRouter.Route(messageDto);
+            await ProcessMessagesAsync(response.Result);
             await SaveRepositoryAsync();
         }
 
         public async Task ProcessEditMessage(Message message)
         {
-            var m = MessageMapper.Map(message);
-            if (IsMessageFromTargetChat(message))
-            {
-                _targetChatMessageHandler.HandleEdit(m);
-            }
+            await ProcessMessage(message);
         }
 
         private async Task ProcessMessagesAsync(List<Response> messages)
