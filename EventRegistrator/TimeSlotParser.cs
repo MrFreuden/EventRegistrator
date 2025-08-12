@@ -74,12 +74,12 @@ namespace EventRegistrator
         }
 
 
-        public static List<Registration> ParseRegistrationMessage(string input, long userId, DateTime eventDate, Dictionary<int, TimeSpan> slotMap, int messageId)
+        public static List<Registration> ParseRegistrationMessage(MessageDTO message, Dictionary<int, TimeSpan> slotMap)
         {
             var result = new List<Registration>();
-            if (string.IsNullOrWhiteSpace(input)) return result;
+            if (string.IsNullOrWhiteSpace(message.Text)) return result;
 
-            var tokens = TokenSplit.Split(input.Trim());
+            var tokens = TokenSplit.Split(message.Text.Trim());
             int i = 0;
 
             while (i < tokens.Length)
@@ -105,9 +105,9 @@ namespace EventRegistrator
                 while (i < tokens.Length && IsSlotToken(tokens[i]))
                 {
                     var slotToken = tokens[i++];
-                    if (TryResolveSlotToken(slotToken, eventDate, slotMap, out DateTime registrationTime))
+                    if (TryResolveSlotToken(slotToken, message.Created, slotMap, out DateTime registrationTime))
                     {
-                        result.Add(new Registration(userId, name, registrationTime, messageId));
+                        result.Add(new Registration(message.UserId.Value, name, registrationTime, message.Id));
                         anySlot = true;
                     }
                 }

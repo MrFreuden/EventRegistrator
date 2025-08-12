@@ -1,4 +1,5 @@
 ﻿using EventRegistrator.Application;
+using EventRegistrator.Application.DTOs;
 using Telegram.Bot.Types;
 
 namespace EventRegistrator.Infrastructure

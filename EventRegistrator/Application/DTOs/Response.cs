@@ -1,4 +1,4 @@
-﻿namespace EventRegistrator.Application
+﻿namespace EventRegistrator.Application.DTOs
 {
     public class Response
     {

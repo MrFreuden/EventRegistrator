@@ -94,5 +94,11 @@ namespace EventRegistrator.Domain.Models
             }
             return messageIds;
         }
+
+        public bool AddRegistration(Registration registration)
+        {
+            var slot = TimeSlotParser.FindMatchingTimeSlot(_slots, registration);
+            return slot.AddRegistration(registration);
+        }
     }
 }

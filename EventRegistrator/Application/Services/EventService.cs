@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Domain;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Services
@@ -13,7 +14,7 @@ namespace EventRegistrator.Application.Services
             _userRepository = userRepository;
         }
 
-        public Response AddNewEvent(Event @event, DateTime eventTime)
+        public RegistrationResult AddNewEvent(Event @event, DateTime eventTime)
         {
             var user = _userRepository.GetUserByTargetChat(@event.TargetChatId);
             var slots = TimeSlotParser.ExtractTimeSlotsFromTemplate(@event.TemplateText, eventTime);
@@ -21,19 +22,13 @@ namespace EventRegistrator.Application.Services
             @event.AddSlots(slots);
             user.AddEvent(@event);
 
-            return new Response
-            {
-                ChatId = @event.TargetChatId,
-                Text = @event.TemplateText,
-                ButtonData = (Constants.Cancel, Constants.Cancel),
-                SaveMessageIdCallback = id => { @event.CommentMessageId = id; }
-            };
+            return new RegistrationResult { Event = @event, Success = true };
         }
 
         public static Event Create(MessageDTO message)
         {
             var hashtagName = ParseHashtagName(message.Text);
-            return new Event(message.Created.ToString(), message.Id, message.ChatId, hashtagName);
+            return new Event(_defaultTitle, message.Id, message.ChatId, hashtagName);
         }
 
         private static string ParseHashtagName(string text)

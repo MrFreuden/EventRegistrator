@@ -1,4 +1,4 @@
-﻿using EventRegistrator.Application;
+﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Domain.Models;
 using System.Text;
 using Telegram.Bot;
