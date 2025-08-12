@@ -13,7 +13,7 @@ namespace EventRegistrator.Application.Services
             _userRepository = userRepository;
         }
 
-        public List<AntwortDTO> Register(MessageDTO message)
+        public List<Response> Register(MessageDTO message)
         {
             var user = _userRepository.GetUserByTargetChat(message.ChatId);
             var lastEvent = user.GetLastEvent();
@@ -30,11 +30,11 @@ namespace EventRegistrator.Application.Services
             else
             {
                 Console.WriteLine("Ошибка добавления во временной слот");
-                return [new AntwortDTO { ChatId = message.ChatId, Text = Constants.Error }];
+                return [new Response { ChatId = message.ChatId, Text = Constants.Error }];
             }
         }
 
-        public List<AntwortDTO> HandleRegistrationEdit(MessageDTO message)
+        public List<Response> HandleRegistrationEdit(MessageDTO message)
         {
             var user = _userRepository.GetUserByTargetChat(message.ChatId);
             var lastEvent = user.GetLastEvent();
@@ -50,7 +50,7 @@ namespace EventRegistrator.Application.Services
             return messages;
         }
 
-        private List<AntwortDTO> Unregister(UserAdmin user, Event lastEvent, int messageId)
+        private List<Response> Unregister(UserAdmin user, Event lastEvent, int messageId)
         {
             lastEvent.RemoveRegistrations(messageId);
 
@@ -61,14 +61,14 @@ namespace EventRegistrator.Application.Services
             return [unlikeMessage, privateMessage];
         }
 
-        private List<AntwortDTO> GetUpdateMessages(UserAdmin user, Event lastEvent)
+        private List<Response> GetUpdateMessages(UserAdmin user, Event lastEvent)
         {
             var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
             lastEvent.TemplateText = text;
 
             var eventDataPrivateMessage = GetEventDataPrivateMessage(user.PrivateChatId, lastEvent);
 
-            var firstCommentUpdateMessage = new AntwortDTO
+            var firstCommentUpdateMessage = new Response
             {
                 ChatId = lastEvent.TargetChatId,
                 Text = lastEvent.TemplateText,
@@ -93,9 +93,9 @@ namespace EventRegistrator.Application.Services
             return true;
         }
 
-        private AntwortDTO GetUpdateCommentMessage(Event lastEvent)
+        private Response GetUpdateCommentMessage(Event lastEvent)
         {
-            var firstCommentUpdateMessage = new AntwortDTO
+            var firstCommentUpdateMessage = new Response
             {
                 ChatId = lastEvent.TargetChatId,
                 Text = lastEvent.TemplateText,
@@ -104,11 +104,11 @@ namespace EventRegistrator.Application.Services
             return firstCommentUpdateMessage;
         }
 
-        private AntwortDTO GetEventDataPrivateMessage(long chatId, Event lastEvent)
+        private Response GetEventDataPrivateMessage(long chatId, Event lastEvent)
         {
             if (lastEvent.PrivateMessageId == default)
             {
-                var eventDataMessage = new AntwortDTO
+                var eventDataMessage = new Response
                 {
                     ChatId = chatId,
                     Text = TextFormatter.FormatRegistrationsInfo(lastEvent),
@@ -118,7 +118,7 @@ namespace EventRegistrator.Application.Services
             }
             else
             {
-                var eventDataPrivateUpdateMessage = new AntwortDTO
+                var eventDataPrivateUpdateMessage = new Response
                 {
                     ChatId = chatId,
                     //Text = lastEvent.TemplateText,
@@ -129,9 +129,9 @@ namespace EventRegistrator.Application.Services
             }
         }
 
-        private AntwortDTO CreateLikeMessage(long chatId, int messageId)
+        private Response CreateLikeMessage(long chatId, int messageId)
         {
-            return new AntwortDTO
+            return new Response
             {
                 ChatId = chatId,
                 MessageToEditId = messageId,
@@ -139,9 +139,9 @@ namespace EventRegistrator.Application.Services
             };
         }
 
-        private AntwortDTO CreateUnlikeMessage(long chatId, int messageId)
+        private Response CreateUnlikeMessage(long chatId, int messageId)
         {
-            return new AntwortDTO
+            return new Response
             {
                 ChatId = chatId,
                 MessageToEditId = messageId,

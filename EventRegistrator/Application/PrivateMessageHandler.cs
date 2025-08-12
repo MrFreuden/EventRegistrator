@@ -14,7 +14,7 @@ namespace EventRegistrator.Application
             _userRepository = userRepository;
         }
 
-        public AntwortDTO Handle(MessageDTO message)
+        public Response Handle(MessageDTO message)
         {
             if (IsCommand(message))
             {
@@ -24,34 +24,34 @@ namespace EventRegistrator.Application
             {
                 return ProcessEditTemplateText(message);
             }
-            return new AntwortDTO { ChatId = message.ChatId, Text = Constants.Error };
+            return new Response { ChatId = message.ChatId, Text = Constants.Error };
         }
 
-        private AntwortDTO ProcessPrivateMessageCommand(MessageDTO message)
+        private Response ProcessPrivateMessageCommand(MessageDTO message)
         {
             switch (message.Text)
             {
                 case "/start":
                     _userRepository.AddUser(message.ChatId);
-                    return new AntwortDTO { ChatId = message.ChatId, Text = Constants.Greetings };
+                    return new Response { ChatId = message.ChatId, Text = Constants.Greetings };
                 case "/settings":
                     var text = _userRepository.GetUser(message.ChatId).GetTargetChat().GetHashtagByName("sws").TemplateText;
-                    return new AntwortDTO { ChatId = message.ChatId, Text = text };
+                    return new Response { ChatId = message.ChatId, Text = text };
                 case "/admin":
                     var text2 = TextFormatter.GetAllUsersInfo(_userRepository as UserRepository);
-                    return new AntwortDTO { ChatId = message.ChatId, Text = text2 };
+                    return new Response { ChatId = message.ChatId, Text = text2 };
                 default:
-                    return new AntwortDTO { ChatId = message.ChatId, Text = Constants.UnknownCommand };
+                    return new Response { ChatId = message.ChatId, Text = Constants.UnknownCommand };
             }
         }
 
-        private AntwortDTO ProcessEditTemplateText(MessageDTO message)
+        private Response ProcessEditTemplateText(MessageDTO message)
         {
             var user = _userRepository.GetUser(message.ChatId);
             user.IsAsked = false;
             var hashtag = user.GetTargetChat().GetHashtagByName("sws");
             hashtag.EditTemplateText(message.Text);
-            return new AntwortDTO { ChatId = message.ChatId, Text = hashtag.TemplateText };
+            return new Response { ChatId = message.ChatId, Text = hashtag.TemplateText };
         }
 
         private bool IsUserAsked(MessageDTO message)

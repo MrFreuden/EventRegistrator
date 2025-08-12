@@ -19,21 +19,21 @@ namespace EventRegistrator.Infrastructure
             if (callbackQuery.Data.StartsWith("EditTemplateText"))
             {
                 _userRepository.GetUser(callbackQuery.From.Id).IsAsked = true;
-                var askForTextMessage = new AntwortDTO { ChatId = callbackQuery.From.Id, Text = Constants.AskForNewTemplate };
+                var askForTextMessage = new Response { ChatId = callbackQuery.From.Id, Text = Constants.AskForNewTemplate };
                 await _messageSender.SendMessage(askForTextMessage);
             }
             else if (callbackQuery.Data.StartsWith("Cancel"))
             {
-                var messages = new List<AntwortDTO>();
+                var messages = new List<Response>();
                 var user = _userRepository.GetUserByTargetChat(callbackQuery.Message.Chat.Id);
                 var lastEvent = user.GetLastEvent();
                 var messageIds = lastEvent.RemoveRegistrations(callbackQuery.From.Id);
                 foreach (var messageId in messageIds)
                 {
-                    messages.Add(new AntwortDTO { ChatId = lastEvent.TargetChatId, MessageToEditId = messageId, UnLike = true });
+                    messages.Add(new Response { ChatId = lastEvent.TargetChatId, MessageToEditId = messageId, UnLike = true });
                 }
 
-                var eventDataPrivateUpdateMessage = new AntwortDTO
+                var eventDataPrivateUpdateMessage = new Response
                 {
                     ChatId = user.PrivateChatId,
                     Text = TextFormatter.FormatRegistrationsInfo(lastEvent),
@@ -45,7 +45,7 @@ namespace EventRegistrator.Infrastructure
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
                 lastEvent.TemplateText = text;
 
-                var firstCommentUpdateMessage = new AntwortDTO
+                var firstCommentUpdateMessage = new Response
                 {
                     ChatId = lastEvent.TargetChatId,
                     Text = lastEvent.TemplateText,
@@ -57,7 +57,7 @@ namespace EventRegistrator.Infrastructure
             }
         }
 
-        private async Task ProcessMessagesAsync(List<AntwortDTO> messages)
+        private async Task ProcessMessagesAsync(List<Response> messages)
         {
             foreach (var message in messages)
             {

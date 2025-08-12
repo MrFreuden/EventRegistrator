@@ -17,7 +17,7 @@ namespace EventRegistrator.Application
             _registrationService = new RegistrationService(userRepository);
         }
 
-        public List<AntwortDTO> HandleEdit(MessageDTO message)
+        public List<Response> HandleEdit(MessageDTO message)
         {
             if (IsReplyToPostMessage(message))
             {
@@ -26,7 +26,7 @@ namespace EventRegistrator.Application
             return [];
         }
 
-        public List<AntwortDTO> Handle(MessageDTO message)
+        public List<Response> Handle(MessageDTO message)
         {
             if (IsFromChannel(message) && IsHasHashtag(message))
             {

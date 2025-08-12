@@ -13,7 +13,7 @@ namespace EventRegistrator.Application.Services
             _userRepository = userRepository;
         }
 
-        public AntwortDTO AddNewEvent(Event @event, DateTime eventTime)
+        public Response AddNewEvent(Event @event, DateTime eventTime)
         {
             var user = _userRepository.GetUserByTargetChat(@event.TargetChatId);
             var slots = TimeSlotParser.ExtractTimeSlotsFromTemplate(@event.TemplateText, eventTime);
@@ -21,7 +21,7 @@ namespace EventRegistrator.Application.Services
             @event.AddSlots(slots);
             user.AddEvent(@event);
 
-            return new AntwortDTO
+            return new Response
             {
                 ChatId = @event.TargetChatId,
                 Text = @event.TemplateText,

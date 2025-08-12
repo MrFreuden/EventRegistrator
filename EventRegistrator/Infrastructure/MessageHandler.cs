@@ -22,25 +22,25 @@ namespace EventRegistrator.Infrastructure
 
         public async Task ProcessMessage(Message message)
         {
-            AntwortDTO messageDTO = null;
-            var m = MessageMapper.Map(message);
+            Response response = null;
+            var messageDto = MessageMapper.Map(message);
             if (IsPrivateMessage(message))
             {
-                messageDTO = _privateMessageHandler.Handle(m);
+                response = _privateMessageHandler.Handle(messageDto);
             }
             else if (IsMessageFromTargetChat(message))
             {
-                await ProcessMessagesAsync(_targetChatMessageHandler.Handle(m));
+                await ProcessMessagesAsync(_targetChatMessageHandler.Handle(messageDto));
                 return;
             }
             else
             {
-                messageDTO = new AntwortDTO { ChatId = message.Chat.Id, Text = Constants.Error };
+                response = new Response { ChatId = message.Chat.Id, Text = Constants.Error };
             }
-            await _messageSender.SendMessage(messageDTO);
+            await _messageSender.SendMessage(response);
             await SaveRepositoryAsync();
         }
-        private async Task ProcessMessagesAsync(List<AntwortDTO> messages)
+        private async Task ProcessMessagesAsync(List<Response> messages)
         {
             foreach (var message in messages)
             {

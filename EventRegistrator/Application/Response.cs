@@ -1,6 +1,6 @@
 ﻿namespace EventRegistrator.Application
 {
-    public class AntwortDTO
+    public class Response
     {
         public long ChatId { get; set; }
         public string Text { get; set; }
