@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using EventRegistrator.Application.Interfaces;
+using Newtonsoft.Json;
 
 namespace EventRegistrator.Domain.Models
 {
@@ -12,6 +13,7 @@ namespace EventRegistrator.Domain.Models
         public long Id { get; set; }
         public long PrivateChatId { get; set; }
         public bool IsAsked { get; set; }
+        public IState State { get; set; }
 
         public UserAdmin(long id)
         {

@@ -1,7 +1,7 @@
 ﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Domain.Models;
 
-namespace EventRegistrator.Application
+namespace EventRegistrator.Application.Interfaces
 {
     public interface IHandler
     {

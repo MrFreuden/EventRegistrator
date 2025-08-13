@@ -1,4 +1,7 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.States;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 
@@ -22,10 +25,10 @@ namespace EventRegistrator.Application
 
         public async Task<List<Response>> HandleAsync(MessageDTO message)
         {
+            var user = _userRepository.GetUser(message.ChatId); 
             if (IsUserAsked(message))
             {
-                var editTemplateTextState = new EditTemplateTextState(_userRepository);
-                return [await editTemplateTextState.Handle(message)];
+                return [await user.State.Handle(message)];
             }
             if (IsCommand(message))
             {

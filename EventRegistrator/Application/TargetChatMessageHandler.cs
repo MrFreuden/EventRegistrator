@@ -1,4 +1,6 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
@@ -21,7 +23,7 @@ namespace EventRegistrator.Application
             _responseManager = new ResponseManager();
         }
 
-        public async Task<List<Response>> HandleEdit(MessageDTO message)
+        public async Task<List<Response>> HandleEditAsync(MessageDTO message)
         {
             if (IsReplyToPostMessage(message))
             {
@@ -35,24 +37,19 @@ namespace EventRegistrator.Application
                     lastEvent.TemplateText = text;
 
                     var messages = GetSuccessResponsesForEdit(user, resultUndo);
-                    messages.AddRange(await Handle(message));
+                    messages.AddRange(await HandleAsync(message));
                     return messages;
                 }
             }
             return [];
         }
 
-        public Task<List<Response>> HandleAsync(MessageDTO message)
+        public async Task<List<Response>> HandleAsync(MessageDTO message)
         {
-            throw new NotImplementedException();
-        }
-
-        public bool CanHandle(MessageDTO message)
-        {
-            return IsMessageFromTargetChat(message);
-        }
-        public async Task<List<Response>> Handle(MessageDTO message)
-        {
+            if (message.IsEdit)
+            {
+                return await HandleEditAsync(message);
+            }
             var user = _userRepository.GetUserByTargetChat(message.ChatId);
             if (IsFromChannel(message) && IsHasHashtag(message))
             {
@@ -65,6 +62,11 @@ namespace EventRegistrator.Application
                 return await registerCommand.Execute(message, user);
             }
             return [];
+        }
+
+        public bool CanHandle(MessageDTO message)
+        {
+            return IsMessageFromTargetChat(message);
         }
 
         private List<Response> GetSuccessResponses(UserAdmin user, RegistrationResult result)
