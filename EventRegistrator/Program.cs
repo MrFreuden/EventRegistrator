@@ -3,6 +3,7 @@ using EventRegistrator.Application;
 using EventRegistrator.Application.Handlers;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
+using EventRegistrator.Domain;
 using EventRegistrator.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
@@ -69,8 +70,10 @@ namespace EventRegistrator
 
             var services = new ServiceCollection();
 
-            var bot = new TelegramBotClient(apiToken);
-            DI(services, bot);
+            var bot = new TelegramBotClient(apiToken); 
+            services.AddSingleton<ITelegramBotClient>(bot);
+            services.AddSingleton(loader);
+            DI(services);
             var serviceProvider = services.BuildServiceProvider();
 
             //EnvLoader.LoadDefaultUser1(userRepository);
@@ -88,11 +91,9 @@ namespace EventRegistrator
             return bot;
         }
 
-        private static void DI(ServiceCollection services, ITelegramBotClient bot)
+        private static void DI(ServiceCollection services)
         {
-            
-            services.AddSingleton<ITelegramBotClient>(bot);
-
+            services.AddSingleton<IUserRepository, UserRepository>();
             services.AddSingleton<UserRepository>();
             services.AddSingleton<MessageSender>();
             services.AddSingleton<EventService>();
@@ -107,6 +108,7 @@ namespace EventRegistrator
                     sp.GetRequiredService<TargetChatMessageHandler>()
                 }));
             services.AddSingleton<MessageHandler>();
+            services.AddSingleton<CallbackQueryHandler>();
         }
 
         private static async Task HandleHttpRequestsAsync(HttpListener listener, CancellationTokenSource cancellationToken)

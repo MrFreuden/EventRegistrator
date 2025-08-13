@@ -1,5 +1,6 @@
 ﻿using EventRegistrator.Application;
 using EventRegistrator.Application.DTOs;
+using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 using Telegram.Bot.Types;
 
@@ -7,12 +8,12 @@ namespace EventRegistrator.Infrastructure
 {
     public class MessageHandler
     {
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
         private readonly MessageSender _messageSender;
         private readonly RepositoryLoader _repositoryLoader;
         private readonly UpdateRouter _updateRouter;
 
-        public MessageHandler(UserRepository userRepository, MessageSender messageSender, RepositoryLoader repositoryLoader, UpdateRouter updateRouter)
+        public MessageHandler(IUserRepository userRepository, MessageSender messageSender, RepositoryLoader repositoryLoader, UpdateRouter updateRouter)
         {
             _userRepository = userRepository;
             _messageSender = messageSender;

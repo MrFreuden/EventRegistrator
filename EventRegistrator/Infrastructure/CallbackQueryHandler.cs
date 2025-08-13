@@ -1,18 +1,19 @@
 ﻿using EventRegistrator.Application;
 using EventRegistrator.Application.DTOs;
+using EventRegistrator.Domain;
 using Telegram.Bot.Types;
 
 namespace EventRegistrator.Infrastructure
 {
     public class CallbackQueryHandler
     {
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
         private readonly MessageSender _messageSender;
         private readonly RepositoryLoader _repositoryLoader;
         private readonly UpdateRouter _updateRouter;
 
         public CallbackQueryHandler(
-            UserRepository userRepository, 
+            IUserRepository userRepository, 
             MessageSender messageSender, 
             RepositoryLoader repositoryLoader, 
             UpdateRouter updateRouter)
