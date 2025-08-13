@@ -64,16 +64,14 @@ namespace EventRegistrator
 
         private static TelegramBotClient ConfigureBot(string apiToken, CancellationTokenSource cancellationToken)
         {
-            
-            var loader = new RepositoryLoader(EnvLoader.GetDataPath());
-            var userRepository = loader.LoadData();
-
             var services = new ServiceCollection();
-
+            
             var bot = new TelegramBotClient(apiToken); 
+
             services.AddSingleton<ITelegramBotClient>(bot);
-            services.AddSingleton(loader);
+            
             DI(services);
+
             var serviceProvider = services.BuildServiceProvider();
 
             //EnvLoader.LoadDefaultUser1(userRepository);
@@ -93,8 +91,13 @@ namespace EventRegistrator
 
         private static void DI(ServiceCollection services)
         {
-            services.AddSingleton<IUserRepository, UserRepository>();
-            services.AddSingleton<UserRepository>();
+            var loader = new RepositoryLoader(EnvLoader.GetDataPath());
+            var userRepository = loader.LoadData();
+
+            services.AddSingleton(loader);
+            services.AddSingleton<IUserRepository>(userRepository);
+            services.AddSingleton(userRepository);
+
             services.AddSingleton<MessageSender>();
             services.AddSingleton<EventService>();
             services.AddSingleton<RegistrationService>();
