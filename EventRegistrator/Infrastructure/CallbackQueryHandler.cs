@@ -6,56 +6,29 @@ namespace EventRegistrator.Infrastructure
 {
     public class CallbackQueryHandler
     {
-        UserRepository _userRepository;
-        MessageSender _messageSender;
+        private readonly UserRepository _userRepository;
+        private readonly MessageSender _messageSender;
+        private readonly RepositoryLoader _repositoryLoader;
+        private readonly UpdateRouter _updateRouter;
 
-        public CallbackQueryHandler(UserRepository userRepository, MessageSender messageSender)
+        public CallbackQueryHandler(
+            UserRepository userRepository, 
+            MessageSender messageSender, 
+            RepositoryLoader repositoryLoader, 
+            UpdateRouter updateRouter)
         {
             _userRepository = userRepository;
             _messageSender = messageSender;
+            _repositoryLoader = repositoryLoader;
+            _updateRouter = updateRouter;
         }
 
         public async Task ProcessCallbackQuery(CallbackQuery callbackQuery)
         {
-            if (callbackQuery.Data.StartsWith("EditTemplateText"))
-            {
-                _userRepository.GetUser(callbackQuery.From.Id).IsAsked = true;
-                var askForTextMessage = new Response { ChatId = callbackQuery.From.Id, Text = Constants.AskForNewTemplate };
-                await _messageSender.SendMessage(askForTextMessage);
-            }
-            else if (callbackQuery.Data.StartsWith("Cancel"))
-            {
-                var messages = new List<Response>();
-                var user = _userRepository.GetUserByTargetChat(callbackQuery.Message.Chat.Id);
-                var lastEvent = user.GetLastEvent();
-                var messageIds = lastEvent.RemoveRegistrations(callbackQuery.From.Id);
-                foreach (var messageId in messageIds)
-                {
-                    messages.Add(new Response { ChatId = lastEvent.TargetChatId, MessageToEditId = messageId, UnLike = true });
-                }
-
-                var eventDataPrivateUpdateMessage = new Response
-                {
-                    ChatId = user.PrivateChatId,
-                    Text = TextFormatter.FormatRegistrationsInfo(lastEvent),
-                    MessageToEditId = lastEvent.PrivateMessageId,
-                };
-
-                messages.Add(eventDataPrivateUpdateMessage);
-
-                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
-                lastEvent.TemplateText = text;
-
-                var firstCommentUpdateMessage = new Response
-                {
-                    ChatId = lastEvent.TargetChatId,
-                    Text = lastEvent.TemplateText,
-                    MessageToEditId = lastEvent.CommentMessageId,
-                    ButtonData = (Constants.Cancel, Constants.Cancel)
-                };
-                messages.Add(firstCommentUpdateMessage);
-                await ProcessMessagesAsync(messages);
-            }
+            var messageDto = UpdateMapper.Map(callbackQuery);
+            var responses = await _updateRouter.RouteCallback(messageDto);
+            await ProcessMessagesAsync(responses);
+            await SaveRepositoryAsync();
         }
 
         private async Task ProcessMessagesAsync(List<Response> messages)
@@ -66,6 +39,11 @@ namespace EventRegistrator.Infrastructure
 
                 message.SaveMessageIdCallback?.Invoke(sentMessage.MessageId);
             }
+        }
+
+        private async Task SaveRepositoryAsync()
+        {
+            await _repositoryLoader.SaveDataAsync(_userRepository as UserRepository);
         }
     }
 }

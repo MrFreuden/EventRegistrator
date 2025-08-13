@@ -3,7 +3,7 @@ using Telegram.Bot.Types;
 
 namespace EventRegistrator.Infrastructure
 {
-    public static class MessageMapper
+    public static class UpdateMapper
     {
         public static MessageDTO Map(Message message)
         {
@@ -46,6 +46,22 @@ namespace EventRegistrator.Infrastructure
                 result.Add(Map(message));
             }
             return result;
+        }
+
+        public static MessageDTO Map(CallbackQuery callbackQuery)
+        {
+            var message = Map(callbackQuery.Message);
+            var messageDto = new MessageDTO
+            {
+                ChatId = message.ChatId,
+                Id = message.Id,
+                Text = callbackQuery.Data,
+                UserId = message.UserId,
+                ReplyToMessageId = message.ReplyToMessageId,
+                Created = message.Created
+            };
+
+            return messageDto;
         }
     }
 }

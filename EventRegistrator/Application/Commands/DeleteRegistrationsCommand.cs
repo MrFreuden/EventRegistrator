@@ -5,39 +5,36 @@ using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Commands
 {
-    public class RegisterCommand : ICommand
+    public class DeleteRegistrationsCommand : ICommand
     {
         private readonly ResponseManager _responseManager;
         private readonly RegistrationService _registrationService;
 
-        public RegisterCommand(RegistrationService registrationService, ResponseManager responseManager)
+        public DeleteRegistrationsCommand(RegistrationService registrationService, ResponseManager responseManager)
         {
             _registrationService = registrationService;
             _responseManager = responseManager;
         }
 
-        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
+        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user = null)
         {
             var lastEvent = user.GetLastEvent();
-            var map = TimeSlotParser.GetMaper(lastEvent.TemplateText);
-            var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
 
-            var result = _registrationService.ProcessRegistration(lastEvent, regs);
-            if (result.Success)
+            var resultUndo = _registrationService.CancelRegistration(lastEvent, message.Id);
+            if (resultUndo.Success)
             {
+                message.IsEdit = false;
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
                 lastEvent.TemplateText = text;
-                result.MessageId = message.Id;
-                return GetSuccessResponses(user, result);
             }
-            return [];
+          
+            return GetSuccessResponsesForEdit(user, resultUndo);
         }
 
-
-        private List<Response> GetSuccessResponses(UserAdmin user, RegistrationResult result)
+        private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result)
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
-            messages.Add(_responseManager.CreateLikeMessage(result.Event.TargetChatId, result.MessageId));
+            messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, result.MessageId));
             return messages;
         }
     }

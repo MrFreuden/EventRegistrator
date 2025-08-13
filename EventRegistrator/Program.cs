@@ -1,5 +1,10 @@
 ﻿using DotNetEnv;
+using EventRegistrator.Application;
+using EventRegistrator.Application.Handlers;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Services;
 using EventRegistrator.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using Telegram.Bot;
 
@@ -58,27 +63,50 @@ namespace EventRegistrator
 
         private static TelegramBotClient ConfigureBot(string apiToken, CancellationTokenSource cancellationToken)
         {
-            var bot = new TelegramBotClient(apiToken);
+            
             var loader = new RepositoryLoader(EnvLoader.GetDataPath());
             var userRepository = loader.LoadData();
+
+            var services = new ServiceCollection();
+
+            var bot = new TelegramBotClient(apiToken);
+            DI(services, bot);
+            var serviceProvider = services.BuildServiceProvider();
 
             //EnvLoader.LoadDefaultUser1(userRepository);
             //loader.SaveDataAsync(userRepository);
             //EnvLoader.LoadDefaultUser2(userRepository);
             //EnvLoader.LoadDefaultUser3(userRepository);
             //userRepository.Clear();
-            var messageSender = new MessageSender(bot);
+            var messageHandler = serviceProvider.GetRequiredService<MessageHandler>();
+            var callbackQueryHandler = serviceProvider.GetRequiredService<CallbackQueryHandler>();
 
-            var handler = new BotHandler(new MessageHandler(userRepository, messageSender), new CallbackQueryHandler(userRepository, messageSender));
+            var handler = new BotHandler(messageHandler, callbackQueryHandler);
             Console.WriteLine("Starting bot...");
             bot.StartReceiving(handler.HandleUpdateAsync, handler.HandleErrorAsync, cancellationToken: cancellationToken.Token);
             Console.WriteLine("Bot is running.");
             return bot;
         }
 
-        private static void AddDefaultUsers(UserRepository userRepository)
+        private static void DI(ServiceCollection services, ITelegramBotClient bot)
         {
+            
+            services.AddSingleton<ITelegramBotClient>(bot);
 
+            services.AddSingleton<UserRepository>();
+            services.AddSingleton<MessageSender>();
+            services.AddSingleton<EventService>();
+            services.AddSingleton<RegistrationService>();
+            services.AddSingleton<ResponseManager>();
+            services.AddSingleton<ICommandFactory, CommandFactory>();
+            services.AddSingleton<PrivateMessageHandler>();
+            services.AddSingleton<TargetChatMessageHandler>();
+            services.AddSingleton<UpdateRouter>(sp =>
+                new UpdateRouter(new IHandler[] {
+                    sp.GetRequiredService<PrivateMessageHandler>(),
+                    sp.GetRequiredService<TargetChatMessageHandler>()
+                }));
+            services.AddSingleton<MessageHandler>();
         }
 
         private static async Task HandleHttpRequestsAsync(HttpListener listener, CancellationTokenSource cancellationToken)

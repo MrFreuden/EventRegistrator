@@ -9,24 +9,20 @@ namespace EventRegistrator.Infrastructure
     {
         private readonly UserRepository _userRepository;
         private readonly MessageSender _messageSender;
-        private readonly PrivateMessageHandler _privateMessageHandler;
-        private readonly TargetChatMessageHandler _targetChatMessageHandler; 
         private readonly RepositoryLoader _repositoryLoader;
-        private readonly UpdateRouter _messageRouter;
+        private readonly UpdateRouter _updateRouter;
 
-        public MessageHandler(UserRepository userRepository, MessageSender messageSender)
+        public MessageHandler(UserRepository userRepository, MessageSender messageSender, RepositoryLoader repositoryLoader, UpdateRouter updateRouter)
         {
             _userRepository = userRepository;
             _messageSender = messageSender;
-            _privateMessageHandler = new PrivateMessageHandler(userRepository);
-            _targetChatMessageHandler = new TargetChatMessageHandler(userRepository);
-            _repositoryLoader = new RepositoryLoader(EnvLoader.GetDataPath());
-            _messageRouter = new UpdateRouter([_privateMessageHandler, _targetChatMessageHandler]);
+            _repositoryLoader = repositoryLoader;
+            _updateRouter = updateRouter;
         }
 
         public async Task ProcessMessage(Message message)
         {
-            var messageDto = MessageMapper.Map(message);
+            var messageDto = UpdateMapper.Map(message);
             var responses = GetResponse(messageDto);
             await ProcessMessagesAsync(responses.Result);
             await SaveRepositoryAsync();
@@ -34,7 +30,7 @@ namespace EventRegistrator.Infrastructure
 
         public async Task ProcessEditMessage(Message message)
         {
-            var messageDto = MessageMapper.Map(message);
+            var messageDto = UpdateMapper.Map(message);
             messageDto.IsEdit = true;
             var responses = GetResponse(messageDto);
             await ProcessMessagesAsync(responses.Result);
@@ -43,7 +39,7 @@ namespace EventRegistrator.Infrastructure
 
         private async Task<List<Response>> GetResponse(MessageDTO message)
         {
-            return await _messageRouter.RouteMessage(message);
+            return await _updateRouter.RouteMessage(message);
         }
 
         private async Task ProcessMessagesAsync(List<Response> messages)

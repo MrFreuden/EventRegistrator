@@ -5,7 +5,7 @@ using EventRegistrator.Application.States;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 
-namespace EventRegistrator.Application
+namespace EventRegistrator.Application.Handlers
 {
     public class PrivateMessageHandler : IHandler
     {
