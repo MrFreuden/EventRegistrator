@@ -5,29 +5,28 @@ using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Commands
 {
-    public class DeleteRegistrationsCommand : ICommand
+    public class CancelAllRegistrationsCommand : ICommand
     {
         private readonly ResponseManager _responseManager;
         private readonly RegistrationService _registrationService;
 
-        public DeleteRegistrationsCommand(RegistrationService registrationService, ResponseManager responseManager)
+        public CancelAllRegistrationsCommand(ResponseManager responseManager, RegistrationService registrationService)
         {
-            _registrationService = registrationService;
             _responseManager = responseManager;
+            _registrationService = registrationService;
         }
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
             var lastEvent = user.GetLastEvent();
 
-            var resultUndo = _registrationService.CancelRegistration(lastEvent, message.Id);
+            var resultUndo = _registrationService.CancelAllRegistrations(lastEvent, message.UserId.Value);
             if (resultUndo.Success)
             {
-                message.IsEdit = false;
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
                 lastEvent.TemplateText = text;
             }
-          
+
             return GetSuccessResponsesForEdit(user, resultUndo);
         }
 

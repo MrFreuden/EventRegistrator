@@ -98,7 +98,7 @@ namespace EventRegistrator
             services.AddSingleton<EventService>();
             services.AddSingleton<RegistrationService>();
             services.AddSingleton<ResponseManager>();
-            services.AddSingleton<ICommandFactory, CommandFactory>();
+            services.AddSingleton<ICommandFactory, CommandStateFactory>();
             services.AddSingleton<PrivateMessageHandler>();
             services.AddSingleton<TargetChatMessageHandler>();
             services.AddSingleton<UpdateRouter>(sp =>

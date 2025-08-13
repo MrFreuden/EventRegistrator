@@ -1,6 +1,5 @@
 ﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Services;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 
@@ -8,7 +7,6 @@ namespace EventRegistrator.Application.Handlers
 {
     public class TargetChatMessageHandler : IHandler
     {
-
         private readonly IUserRepository _userRepository;
         private readonly ICommandFactory _commandFactory;
 

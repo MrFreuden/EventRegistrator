@@ -2,8 +2,8 @@
 
 namespace EventRegistrator.Application.Interfaces
 {
-    public interface ICommandFactory
+    public interface IStateFactory
     {
-        ICommand CreateCommand(CommandType commandType);
+        IState CreateState(StateType stateType);
     }
 }

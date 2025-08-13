@@ -13,5 +13,7 @@ namespace EventRegistrator.Application
         public const string Error = "Помилка";
         public const string Cancel = "Cancel";
         public const string AskForNewTemplate = "Введiть новий шаблон";
+        public const string EditTemplateText = "EditTemplateText";
+
     }
 }

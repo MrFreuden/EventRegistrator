@@ -13,7 +13,12 @@ namespace EventRegistrator.Application.States
             _commands = commands;
         }
 
-        public async Task<Response> Handle(MessageDTO message)
+        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
             var s = _commands[message.Text].Invoke();
             return s.Execute(message).Result.First();

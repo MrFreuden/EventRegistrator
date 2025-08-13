@@ -28,12 +28,12 @@ namespace EventRegistrator.Application.Handlers
             var user = _userRepository.GetUser(message.ChatId); 
             if (IsUserAsked(message))
             {
-                return [await user.State.Handle(message)];
+                return [await user.State.Handle(message, user)];
             }
             if (IsCommand(message))
             {
                 var defaultState = new DefaultState(_commands);
-                return [await defaultState.Handle(message)];
+                return [await defaultState.Handle(message, user)];
             }
 
             return [new Response { ChatId = message.ChatId, Text = Constants.Error }];

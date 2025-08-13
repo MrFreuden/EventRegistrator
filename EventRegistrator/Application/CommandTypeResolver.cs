@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Domain.Models;
+﻿using EventRegistrator.Application.Enums;
+using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application
 {
@@ -13,6 +14,16 @@ namespace EventRegistrator.Application
                 return CommandType.CreateEvent;
             if (IsReplyToPostMessage(message, user))
                 return CommandType.Register;
+            if (message.Text.Equals(Constants.Cancel))
+                return CommandType.CancelRegistrations;
+            // ...
+            return null;
+        }
+
+        public static StateType? DetermineStateType(MessageDTO message, UserAdmin user)
+        {
+            if (message.Text.Equals(Constants.EditTemplateText))
+                return StateType.EditTemplateText;
             // ...
             return null;
         }

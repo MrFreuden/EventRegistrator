@@ -5,6 +5,7 @@ namespace EventRegistrator.Application.Interfaces
 {
     public interface IState
     {
-        Task<Response> Handle(MessageDTO message);
+        Task<Response> Handle(MessageDTO message, UserAdmin user);
+        Task<List<Response>> Execute(MessageDTO message, UserAdmin user);
     }
 }

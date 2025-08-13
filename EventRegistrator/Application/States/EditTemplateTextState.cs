@@ -1,22 +1,27 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.States
 {
     public class EditTemplateTextState : IState
     {
-        private readonly IUserRepository _userRepository;
-
-        public EditTemplateTextState(IUserRepository userRepository)
+        private readonly EditTemplateTextCommand _editTemplateTextCommand;
+        public EditTemplateTextState()
         {
-            _userRepository = userRepository;
+            _editTemplateTextCommand = new EditTemplateTextCommand();
+        }
+        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
+        {
+            user.IsAsked = false;
+            return await _editTemplateTextCommand.Execute(message, user);
         }
 
-        public async Task<Response> Handle(MessageDTO message)
+        public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
-            throw new NotImplementedException();
+            user.IsAsked = true;
+            return new Response { ChatId = message.ChatId, Text = Constants.AskForNewTemplate };
         }
     }
 }

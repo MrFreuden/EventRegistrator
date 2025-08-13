@@ -1,54 +1,28 @@
 ﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Handlers
 {
     public class GeneralCallbackQueryHandler : IHandler
     {
-        public Task<List<Response>> HandleAsync(MessageDTO message)
+        private readonly IUserRepository _userRepository;
+        private readonly CommandStateFactory _commandStateFactory;
+
+        public GeneralCallbackQueryHandler(IUserRepository userRepository, CommandStateFactory commandStateFactory)
         {
-            if (message.Text.StartsWith("Cancel"))
-            {
-                var messages = new List<Response>();
-                var user = _userRepository.GetUserByTargetChat(callbackQuery.Message.Chat.Id);
-                var lastEvent = user.GetLastEvent();
-                var messageIds = lastEvent.RemoveRegistrations(callbackQuery.From.Id);
-                foreach (var messageId in messageIds)
-                {
-                    messages.Add(new Response { ChatId = lastEvent.TargetChatId, MessageToEditId = messageId, UnLike = true });
-                }
+            _userRepository = userRepository;
+            _commandStateFactory = commandStateFactory;
+        }
 
-                var eventDataPrivateUpdateMessage = new Response
-                {
-                    ChatId = user.PrivateChatId,
-                    Text = TextFormatter.FormatRegistrationsInfo(lastEvent),
-                    MessageToEditId = lastEvent.PrivateMessageId,
-                };
-
-                messages.Add(eventDataPrivateUpdateMessage);
-
-                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
-                lastEvent.TemplateText = text;
-
-                var firstCommentUpdateMessage = new Response
-                {
-                    ChatId = lastEvent.TargetChatId,
-                    Text = lastEvent.TemplateText,
-                    MessageToEditId = lastEvent.CommentMessageId,
-                    ButtonData = (Constants.Cancel, Constants.Cancel)
-                };
-                messages.Add(firstCommentUpdateMessage);
-                await ProcessMessagesAsync(messages);
-            }
-
-
-            if (callbackQuery.Data.StartsWith("EditTemplateText"))
-            {
-                _userRepository.GetUser(callbackQuery.From.Id).IsAsked = true;
-                var askForTextMessage = new Response { ChatId = callbackQuery.From.Id, Text = Constants.AskForNewTemplate };
-                await _messageSender.SendMessage(askForTextMessage);
-            }
+        public async Task<List<Response>> HandleAsync(MessageDTO message)
+        {
+            var user = _userRepository.GetUserByTargetChat(message.ChatId);
+            var stateType = CommandTypeResolver.DetermineStateType(message, user);
+            var state = _commandStateFactory.CreateState(stateType.Value);
+            user.State = state;
+            return [await state.Handle(message, user)];
         }
 
         public bool CanHandle(MessageDTO message)
