@@ -1,20 +1,24 @@
 ﻿using EventRegistrator.Application.Commands;
 using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Handlers
 {
     public class PrivateMessageHandler : IHandler
     {
         private readonly IUserRepository _userRepository;
+        private readonly ILogger<PrivateMessageHandler> _logger;
         private readonly Dictionary<string, Func<ICommand>> _commands;
 
-        public PrivateMessageHandler(IUserRepository userRepository)
+        public PrivateMessageHandler(IUserRepository userRepository, ILogger<PrivateMessageHandler> logger)
         {
             _userRepository = userRepository;
+            _logger = logger;
             _commands = new Dictionary<string, Func<ICommand>>
             {
                 { "/start", () => new StartCommand(_userRepository) },
@@ -25,7 +29,13 @@ namespace EventRegistrator.Application.Handlers
 
         public async Task<List<Response>> HandleAsync(MessageDTO message)
         {
-            var user = _userRepository.GetUser(message.ChatId); 
+            var user = _userRepository.GetUser(message.ChatId);
+            if (user == null)
+            {
+                _logger.LogWarning("User not found for chat {ChatId}", message.ChatId);
+                return new List<Response>();
+            }
+
             if (IsUserAsked(message))
             {
                 return [await user.State.Handle(message, user)];
@@ -36,9 +46,10 @@ namespace EventRegistrator.Application.Handlers
                 return [await defaultState.Handle(message, user)];
             }
 
-            return [new Response { ChatId = message.ChatId, Text = Constants.Error }];
+            _logger.LogError("Failed to handle private message. Message: {@Message}", message);
+            return new List<Response>();
         }
-
+        
         public bool CanHandle(MessageDTO message)
         {
             //var v = IsCommand(message) == false ? IsUserAsked(message) : true;

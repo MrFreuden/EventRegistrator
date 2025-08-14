@@ -1,6 +1,5 @@
 ﻿using EventRegistrator.Application.DTOs;
-using EventRegistrator.Domain.Models;
-using System.Text;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -10,34 +9,44 @@ namespace EventRegistrator.Infrastructure
     public class MessageSender
     {
         private readonly ITelegramBotClient _bot;
+        private readonly ILogger<MessageSender> _logger;
 
-        public MessageSender(ITelegramBotClient bot)
+        public MessageSender(ITelegramBotClient bot, ILogger<MessageSender> logger)
         {
             _bot = bot;
+            _logger = logger;
         }
 
         public async Task<Message> SendMessage(Response message)
         {
-            if (message.Like || message.UnLike)
+            try
             {
-                await SendReaction(message);
-                return new Message();
+                if (message.Like || message.UnLike)
+                {
+                    await SendReaction(message);
+                    return new Message();
+                }
+                else if (message.ButtonData.HasValue)
+                {
+                    return await SendMessageWithButton(message, new InlineKeyboardButton(message.ButtonData.Value.Item1, message.ButtonData.Value.Item2));
+                }
+                else if (message.MessageToEditId.HasValue)
+                {
+                    return await EditMessageText(message, message.MessageToEditId.Value);
+                }
+                else if (message.MessageToReplyId.HasValue)
+                {
+                    return await ReplyToMessage(message, message.MessageToReplyId.Value);
+                }
+                else
+                {
+                    return await _bot.SendMessage(message.ChatId, message.Text);
+                }
             }
-            else if (message.ButtonData.HasValue)
+            catch(Exception ex)
             {
-                return await SendMessageWithButton(message, new InlineKeyboardButton(message.ButtonData.Value.Item1, message.ButtonData.Value.Item2));
-            }
-            else if (message.MessageToEditId.HasValue)
-            {
-                return await EditMessageText(message, message.MessageToEditId.Value);
-            }
-            else if (message.MessageToReplyId.HasValue)
-            {
-                return await ReplyToMessage(message, message.MessageToReplyId.Value);
-            }
-            else
-            {
-                return await _bot.SendMessage(message.ChatId, message.Text);
+                _logger.LogError(ex, "Failed to send message to chat {ChatId}", message.ChatId);
+                throw;
             }
         }
 
@@ -96,6 +105,6 @@ namespace EventRegistrator.Infrastructure
         private async Task UnLikeMessage(long targetChatId, int messageId)
         {
             await _bot.SetMessageReaction(targetChatId, messageId, []);
-        }    
+        }
     }
 }
