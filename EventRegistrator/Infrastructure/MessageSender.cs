@@ -76,7 +76,7 @@ namespace EventRegistrator.Infrastructure
             return await _bot.SendMessage(message.ChatId, message.Text, replyParameters: replyParams, replyMarkup: markup);
         }
 
-        public async Task SendReaction(Response message)
+        private async Task SendReaction(Response message)
         {
             if (message.Like)
             {
