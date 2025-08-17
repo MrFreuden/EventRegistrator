@@ -1,6 +1,8 @@
 ﻿using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects;
 using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Application.Objects.Enums;
+using EventRegistrator.Application.Services;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;

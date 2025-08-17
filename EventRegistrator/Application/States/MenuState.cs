@@ -4,7 +4,6 @@ using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Application.Objects.Enums;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
-using EventRegistrator.Infrastructure;
 
 namespace EventRegistrator.Application.States
 {
@@ -38,7 +37,6 @@ namespace EventRegistrator.Application.States
             if (extra is not null)
                 return await ApplyAction(extra.Action(_ctx), message, user);
 
-            // Клик по элементу списка
             if (d.GetItems is not null && d.OnItem is not null)
             {
                 var items = d.GetItems();
@@ -62,21 +60,19 @@ namespace EventRegistrator.Application.States
             if (d.GetItems is not null)
             {
                 var pageItems = items.Skip(_page * d.PageSize).Take(d.PageSize);
+                var pageRow = new List<Button>();
                 foreach (var it in pageItems)
-                    buttons.Add(new() { new(it.Name, it.Callback) });
+                    pageRow.Add(new Button(it.Name, it.Callback));
 
-                // Навигация
-                var nav = new List<Button>();
-                if (_page > 0) nav.Add(new Button("⬅️", $"{PagePrefix}{_page - 1}"));
-                if (_page < maxPage) nav.Add(new Button("➡️", $"{PagePrefix}{_page + 1}"));
-                if (nav.Count > 0) buttons.Add(nav);
+                buttons.Add(pageRow);
+
+                AddNavigationButtons(buttons, maxPage);
             }
 
-            // Дополнительные кнопки
             foreach (var ex in d.Extras)
                 buttons.Add(new() { new(ex.Label, ex.Callback) });
 
-            var pageCounterText = maxPage < 2 ? "" : $"\nСтр. { _page + 1}/{ Math.Max(1, maxPage + 1)}";
+            var pageCounterText = maxPage < 2 ? "" : $"\nСтр. {_page + 1}/{Math.Max(1, maxPage + 1)}";
 
             user.CurrentContext = _ctx;
 
@@ -86,8 +82,17 @@ namespace EventRegistrator.Application.States
                 Text = d.GetItems is null
                     ? d.Title.Invoke(_ctx)
                     : $"{d.Title.Invoke(_ctx)}" + pageCounterText,
-                ButtonData = new ButtonData(buttons)
+                ButtonData = new ButtonData(buttons),
+                MessageToEditId = user.LastMessageId,
             });
+        }
+
+        private void AddNavigationButtons(List<List<Button>> buttons, int maxPage)
+        {
+            var nav = new List<Button>();
+            if (_page > 0) nav.Add(new Button("⬅️", $"{PagePrefix}{_page - 1}"));
+            if (_page < maxPage) nav.Add(new Button("➡️", $"{PagePrefix}{_page + 1}"));
+            if (nav.Count > 0) buttons.Add(nav);
         }
 
         private async Task<List<Response>> ApplyAction(MenuAction action, MessageDTO message, UserAdmin user)

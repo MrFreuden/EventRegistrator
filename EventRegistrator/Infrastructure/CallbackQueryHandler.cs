@@ -26,6 +26,7 @@ namespace EventRegistrator.Infrastructure
 
         public async Task ProcessCallbackQuery(CallbackQuery callbackQuery)
         {
+            await _messageSender.AnswerAsync(callbackQuery.Id);
             var messageDto = UpdateMapper.Map(callbackQuery);
             var responses = await _updateRouter.RouteCallback(messageDto);
             await ProcessMessagesAsync(responses);

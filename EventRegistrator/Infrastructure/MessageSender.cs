@@ -50,6 +50,11 @@ namespace EventRegistrator.Infrastructure
             }
         }
 
+        public async Task AnswerAsync(string id)
+        {
+            await _bot.AnswerCallbackQuery(id);
+        }
+
         private async Task<Message> SendMessageWithButton(Response message)
         {
             var markup = ButtonMapper.Map(message.ButtonData);

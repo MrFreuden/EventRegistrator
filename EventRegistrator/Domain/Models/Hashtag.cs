@@ -23,10 +23,10 @@ namespace EventRegistrator.Domain.Models
         }
 
         [JsonConstructor]
-        private Hashtag()
+        private Hashtag(string hashtagName, string templateText)
         {
-            HashtagName = "default";
-            TemplateText = defaultTemplate;
+            HashtagName = hashtagName;
+            TemplateText = templateText;
         }
 
         public void EditTemplateText(string text)

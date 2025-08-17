@@ -8,12 +8,12 @@ namespace EventRegistrator.Application.States
     {
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            return [];
+            return [new Response { ChatId = user.Id, Text = Constants.Error , MessageToEditId = user.LastMessageId }];
         }
 
         public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
-            return new Response();
+            return new Response { ChatId = user.Id, Text = Constants.Error, MessageToEditId = user.LastMessageId };
         }
     }
 }

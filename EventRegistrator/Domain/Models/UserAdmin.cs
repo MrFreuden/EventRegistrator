@@ -20,6 +20,7 @@ namespace EventRegistrator.Domain.Models
         [JsonIgnore]
         public IState State { get; set; }
         public MenuContext CurrentContext { get; set; }
+        public int? LastMessageId { get; set; }
 
         public UserAdmin(long id)
         {

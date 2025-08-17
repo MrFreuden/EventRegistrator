@@ -12,6 +12,7 @@ namespace EventRegistrator.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly UserAdmin _userAdmin;
         private readonly IStateFactory _stateFactory;
+        private const int _maxObjPerPage = 3;
         public MenuService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
@@ -22,7 +23,7 @@ namespace EventRegistrator.Application.Services
             MenuKey.TargetChats => new MenuDescriptor(
                 Title: (ctx) => "Выберите чат",
                 GetItems: () => _userRepository.GetUser(ctx.ChatId).GetAllTargetChats(),
-                PageSize: 8,
+                PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
                 new MenuExtra("➕ Добавить чат", "chat_add",
@@ -40,9 +41,9 @@ namespace EventRegistrator.Application.Services
             ),
 
             MenuKey.Hashtags => new MenuDescriptor(
-                Title: (ctx) => $"Хэштеги чата {ctx.TargetChatId}",
+                Title: (ctx) => $"Хэштеги чата {_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).Name}",
                 GetItems: () => _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetAllHashtags(ctx.TargetChatId.Value),
-                PageSize: 10,
+                PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
                 new MenuExtra("➕ Добавить хэштег", "tag_add",
@@ -64,13 +65,13 @@ namespace EventRegistrator.Application.Services
                 Title: ctx =>
         $"Шаблон для хэштегу {ctx.HashtagName}\n{_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).GetHashtagByName(ctx.HashtagName).TemplateText}",
                 GetItems: null,
-                PageSize: 10,
+                PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
                 new MenuExtra("Редагувати", Constants.EditTemplateText,
                     c => new SwitchState(() => new EditTemplateTextState())),
                 new MenuExtra("🔙 Назад", "back",
-                    _ => new NavigateMenu(MenuKey.TargetChats, ctx with { TargetChatId = null }))
+                    _ => new NavigateMenu(MenuKey.Hashtags, ctx with { HashtagName = null }))
                 },
                 OnItem: null
             ),

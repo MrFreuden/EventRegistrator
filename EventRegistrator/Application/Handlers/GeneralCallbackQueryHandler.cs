@@ -36,7 +36,7 @@ namespace EventRegistrator.Application.Handlers
                 return response;
             }
 
-            _logger.LogError("Failed to handle callback {MessageDTO}", message);
+            _logger.LogError("Failed to handle callback {MessageDTO}", message.Text);
             return [];
         }
 

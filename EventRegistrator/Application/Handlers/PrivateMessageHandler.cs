@@ -34,15 +34,16 @@ namespace EventRegistrator.Application.Handlers
                 _logger.LogWarning("User not found for chat {ChatId}", message.ChatId);
                 return new List<Response>();
             }
-
-            if (IsUserAsked(message))
-            {
-                return await user.State.Execute(message, user);
-            }
+            user.LastMessageId = null;
             if (IsCommand(message))
             {
                 var defaultState = new DefaultState(_commands);
                 return [await defaultState.Handle(message, user)];
+            }
+
+            if (user.IsAsked || user.State != null || user.State as DefaultState == null)
+            {
+                return await user.State.Execute(message, user);
             }
 
             _logger.LogError("Failed to handle private message. Message: {@Message}", message);
