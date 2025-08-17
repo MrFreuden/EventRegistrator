@@ -1,7 +1,6 @@
 ﻿using EventRegistrator.Application.Commands;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Application.Objects.Enums;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
@@ -22,7 +21,7 @@ namespace EventRegistrator.Application.Handlers
             _commands = new Dictionary<string, Func<ICommand>>
             {
                 { "/start", () => new StartCommand(_userRepository) },
-                { "/settings", () => new StartMenuCommand(_userRepository, MenuKey.TargetChats) },
+                { "/settings", () => new SettingsCommand(_userRepository) },
                 { "/admin", () => new AdminCommand(_userRepository) }
             };
         }
@@ -49,7 +48,7 @@ namespace EventRegistrator.Application.Handlers
             _logger.LogError("Failed to handle private message. Message: {@Message}", message);
             return new List<Response>();
         }
-        
+
         public bool CanHandle(MessageDTO message)
         {
             return IsPrivateMessage(message);
