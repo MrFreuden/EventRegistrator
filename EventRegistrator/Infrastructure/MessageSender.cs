@@ -1,4 +1,4 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Objects.DTOs;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -26,9 +26,9 @@ namespace EventRegistrator.Infrastructure
                     await SendReaction(message);
                     return new Message();
                 }
-                else if (message.ButtonData.HasValue)
+                else if (message.ButtonData != null && message.ButtonData != null)
                 {
-                    return await SendMessageWithButton(message, new InlineKeyboardButton(message.ButtonData.Value.Item1, message.ButtonData.Value.Item2));
+                    return await SendMessageWithButton(message);
                 }
                 else if (message.MessageToEditId.HasValue)
                 {
@@ -50,15 +50,16 @@ namespace EventRegistrator.Infrastructure
             }
         }
 
-        private async Task<Message> SendMessageWithButton(Response message, ReplyMarkup markup)
+        private async Task<Message> SendMessageWithButton(Response message)
         {
+            var markup = ButtonMapper.Map(message.ButtonData);
             if (message.MessageToReplyId.HasValue)
             {
                 return await ReplyToMessageWithButton(message, markup, message.MessageToReplyId.Value);
             }
             if (message.MessageToEditId.HasValue)
             {
-                return await EditMessageText(message, message.MessageToEditId.Value, new InlineKeyboardButton(message.ButtonData.Value.Item1, message.ButtonData.Value.Item2));
+                return await EditMessageText(message, message.MessageToEditId.Value, markup);
             }
             return await _bot.SendMessage(message.ChatId, message.Text, replyMarkup: markup);
         }

@@ -1,7 +1,7 @@
 ﻿using EventRegistrator.Application.Commands;
-using EventRegistrator.Application.DTOs;
-using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects.DTOs;
+using EventRegistrator.Application.Objects.Enums;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
@@ -22,7 +22,7 @@ namespace EventRegistrator.Application.Handlers
             _commands = new Dictionary<string, Func<ICommand>>
             {
                 { "/start", () => new StartCommand(_userRepository) },
-                { "/settings", () => new SettingsCommand() },
+                { "/settings", () => new StartMenuCommand(_userRepository, MenuKey.TargetChats) },
                 { "/admin", () => new AdminCommand(_userRepository) }
             };
         }
@@ -38,7 +38,7 @@ namespace EventRegistrator.Application.Handlers
 
             if (IsUserAsked(message))
             {
-                return [await user.State.Handle(message, user)];
+                return await user.State.Execute(message, user);
             }
             if (IsCommand(message))
             {
@@ -52,7 +52,6 @@ namespace EventRegistrator.Application.Handlers
         
         public bool CanHandle(MessageDTO message)
         {
-            //var v = IsCommand(message) == false ? IsUserAsked(message) : true;
             return IsPrivateMessage(message);
         }
 

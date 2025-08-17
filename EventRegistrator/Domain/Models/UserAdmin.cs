@@ -1,4 +1,5 @@
 ﻿using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects;
 using Newtonsoft.Json;
 
 namespace EventRegistrator.Domain.Models
@@ -13,7 +14,12 @@ namespace EventRegistrator.Domain.Models
         public long Id { get; set; }
         public long PrivateChatId { get; set; }
         public bool IsAsked { get; set; }
+
+        [JsonIgnore]
+        public Stack<IState> StateHistory = new();
+        [JsonIgnore]
         public IState State { get; set; }
+        public MenuContext CurrentContext { get; set; }
 
         public UserAdmin(long id)
         {
@@ -38,16 +44,16 @@ namespace EventRegistrator.Domain.Models
             return _events.Last();
         }
 
-        public TargetChat GetTargetChat()
+        public TargetChat GetTargetChat(long targetChatId)
         {
-            return _targetChats.First().Value;
+            return _targetChats[targetChatId];
         }
 
         public bool ContainsTargetChat(long id)
         {
             return _targetChats.ContainsKey(id);
         }
-        
+
         public bool ContainsHashtag(string hashtag)
         {
             foreach (var chat in _targetChats.Values)
@@ -71,81 +77,15 @@ namespace EventRegistrator.Domain.Models
             }
             return false;
         }
-    }
 
-    public class TargetChat
-    {
-        [JsonProperty]
-        private readonly Dictionary<string, Hashtag> _hashtags;
-        public long Id { get; }
-        public long ChannelId { get; }
-        public string ChannelName { get; }
-
-        public TargetChat(long id, long channelId, string channelName)
+        public IReadOnlyCollection<TargetChat> GetAllTargetChats()
         {
-            Id = id;
-            ChannelId = channelId;
-            ChannelName = channelName;
-            _hashtags = new();
+            return _targetChats.Values;
         }
 
-        public void AddHashtag(Hashtag hashtag)
+        public IReadOnlyCollection<Hashtag> GetAllHashtags(long targetChatId)
         {
-            if (_hashtags.TryAdd(hashtag.HashtagName, hashtag))
-            {
-                return;
-            }
-            throw new NotImplementedException();
-        }
-
-        public Hashtag GetHashtagByName(string name)
-        { 
-            if (_hashtags.TryGetValue(name, out var hashtag))
-            {
-                return hashtag;
-            }
-            throw new NotImplementedException();
-        }
-
-        public bool ContainsHashtag(string hashtag)
-        {
-            return _hashtags.ContainsKey(hashtag);
-        }
-    }
-
-    public class Hashtag
-    {
-        public string HashtagName { get; }
-        public string TemplateText { get; private set; }
-        private const string defaultTemplate = "10:00 - 10 вільних місць\r\n10:15 - 10 вільних місць\r\n10:30 - 10 вільних місць";
-
-        public Hashtag(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Имя хэштега не может быть пустым", nameof(name));
-
-            HashtagName = name;
-            TemplateText = defaultTemplate;
-        }
-
-        [JsonConstructor]
-        private Hashtag()
-        {
-            HashtagName = "default";
-            TemplateText = defaultTemplate;
-        }
-
-        public void EditTemplateText(string text)
-        {
-            if (IsTemplateValid(text))
-            {
-                TemplateText = text;
-            }
-        }
-
-        private bool IsTemplateValid(string text)
-        {
-            return true;
+            return _targetChats[targetChatId].GetAllHashtags();
         }
     }
 }

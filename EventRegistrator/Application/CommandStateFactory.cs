@@ -1,9 +1,9 @@
 ﻿using EventRegistrator.Application.Commands;
-using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects.Enums;
 using EventRegistrator.Application.Services;
 using EventRegistrator.Application.States;
-using CommandType = EventRegistrator.Application.Enums.CommandType;
+using CommandType = EventRegistrator.Application.Objects.Enums.CommandType;
 
 namespace EventRegistrator.Application
 {
@@ -30,6 +30,7 @@ namespace EventRegistrator.Application
                 CommandType.CreateEvent => new CreateEventCommand(_eventService),
                 CommandType.Register => new RegisterCommand(_registrationService, _responseManager),
                 CommandType.CancelRegistration => new DeleteRegistrationsCommand(_registrationService, _responseManager),
+                //CommandType.StartPagination => new StartPagingCommand(),
                 _ => throw new ArgumentException($"Неизвестный тип команды: {commandType}")
             };
         }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -16,6 +17,16 @@ namespace EventRegistrator
 {
     internal class Program
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        const uint SWP_NOSIZE = 0x0001;
+        const uint SWP_NOZORDER = 0x0004;
+        const uint SWP_SHOWWINDOW = 0x0040;
+        static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         static async Task Main(string[] args)
         {
             DotNetEnv.Env.Load();
@@ -73,8 +84,17 @@ namespace EventRegistrator
             }
         }
 
+        private static void MoveConsoleToSecondMonitor()
+        {
+            var hWnd = GetConsoleWindow();
+            int x = 400;
+            int y = 1200;
+            SetWindowPos(hWnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
+        }
+
         private static async Task RunPolling(ITelegramBotClient bot, BotHandler handler)
         {
+            MoveConsoleToSecondMonitor();
             using var cts = new CancellationTokenSource();
             Log.Information("Starting in polling mode...");
             bot.StartReceiving(handler.HandleUpdateAsync, handler.HandleErrorAsync, cancellationToken: cts.Token);
@@ -118,7 +138,6 @@ namespace EventRegistrator
             //EnvLoader.LoadDefaultUser2(userRepository);
             //EnvLoader.LoadDefaultUser3(userRepository);
             //userRepository.Clear();
-
             services.AddSingleton(loader);
             services.AddSingleton<IUserRepository>(userRepository);
             services.AddSingleton(userRepository);
@@ -128,13 +147,22 @@ namespace EventRegistrator
             services.AddSingleton<RegistrationService>();
             services.AddSingleton<ResponseManager>();
             services.AddSingleton<ICommandFactory, CommandStateFactory>();
+            services.AddSingleton<IStateFactory, CommandStateFactory>();
+            services.AddSingleton<CommandStateFactory>();
             services.AddSingleton<PrivateMessageHandler>();
             services.AddSingleton<TargetChatMessageHandler>();
+            services.AddSingleton<GeneralCallbackQueryHandler>();
             services.AddSingleton<UpdateRouter>(sp =>
-                new UpdateRouter(new IHandler[] {
-                    sp.GetRequiredService<PrivateMessageHandler>(),
-                    sp.GetRequiredService<TargetChatMessageHandler>()
-                }));
+                new UpdateRouter(
+                    new IHandler[] {
+                        sp.GetRequiredService<PrivateMessageHandler>(),
+                        sp.GetRequiredService<TargetChatMessageHandler>()
+                    },
+                    new IHandler[] {
+                        sp.GetRequiredService<GeneralCallbackQueryHandler>(),
+                    },
+                    sp.GetRequiredService<ILogger<UpdateRouter>>()
+                ));
             services.AddSingleton<MessageHandler>();
             services.AddSingleton<CallbackQueryHandler>();
         }

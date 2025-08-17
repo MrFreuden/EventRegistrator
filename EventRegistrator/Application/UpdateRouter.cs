@@ -1,6 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
-using EventRegistrator.Application.Handlers;
-using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain.Models;
 using Microsoft.Extensions.Logging;
 
@@ -8,17 +7,20 @@ namespace EventRegistrator.Application
 {
     public class UpdateRouter
     {
-        private readonly List<IHandler> _handlers;
+        private readonly List<IHandler> _messageHandlers;
+        private readonly List<IHandler> _callbackHandlers;
         private readonly ILogger<UpdateRouter> _logger;
-        public UpdateRouter(IEnumerable<IHandler> handlers, ILogger<UpdateRouter> logger)
+
+        public UpdateRouter(IEnumerable<IHandler> messageHandlers, IEnumerable<IHandler> callbackHandlers, ILogger<UpdateRouter> logger)
         {
-            _handlers = handlers.ToList();
-            _logger = logger;   
+            _messageHandlers = messageHandlers.ToList();
+            _callbackHandlers = callbackHandlers.ToList();
+            _logger = logger;
         }
 
         public async Task<List<Response>> RouteMessage(MessageDTO message)
         {
-            var handler = _handlers.FirstOrDefault(h => h.CanHandle(message));
+            var handler = _messageHandlers.FirstOrDefault(h => h.CanHandle(message));
             if (handler != null)
             {
                 return await handler.HandleAsync(message);
@@ -31,7 +33,7 @@ namespace EventRegistrator.Application
 
         public async Task<List<Response>> RouteCallback(MessageDTO message)
         {
-            var handler = _handlers.FirstOrDefault(h => h.CanHandle(message));
+            var handler = _callbackHandlers.FirstOrDefault(h => h.CanHandle(message));
             if (handler != null)
             {
                 return await handler.HandleAsync(message);

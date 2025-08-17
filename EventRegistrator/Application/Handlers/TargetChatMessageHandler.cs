@@ -1,5 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
-using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -52,7 +52,7 @@ namespace EventRegistrator.Application.Handlers
             }
             else
             {
-                _logger.LogError("HandleEditAsync: failed to create second command for type {CommandType}", commandType2?.Value);
+                _logger.LogError("HandleEditAsync: failed to create second command for type {CommandType}", commandType2);
             }
 
             return result;

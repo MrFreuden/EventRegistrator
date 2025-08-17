@@ -4,13 +4,13 @@ using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.States
 {
-    public class DefaultState : IState
+    internal class AddHashtagState : IState
     {
-        private Dictionary<string, Func<ICommand>> _commands;
+        private long _value;
 
-        public DefaultState(Dictionary<string, Func<ICommand>> commands)
+        public AddHashtagState(long value)
         {
-            _commands = commands;
+            _value = value;
         }
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
@@ -20,8 +20,7 @@ namespace EventRegistrator.Application.States
 
         public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
-            var s = _commands[message.Text].Invoke();
-            return s.Execute(message, user).Result.First();
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
-using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure;

@@ -1,5 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
-using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Commands
@@ -9,9 +9,10 @@ namespace EventRegistrator.Application.Commands
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
             user.IsAsked = false;
-            var hashtag = user.GetTargetChat().GetHashtagByName("sws");
+            var hashtag = user.GetTargetChat(user.CurrentContext.TargetChatId.Value).GetHashtagByName(user.CurrentContext.HashtagName);
             hashtag.EditTemplateText(message.Text);
-            return [new Response { ChatId = message.ChatId, Text = hashtag.TemplateText }];
+            user.State = user.StateHistory.Pop();
+            return [await user.State.Handle(message, user)];
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Interfaces

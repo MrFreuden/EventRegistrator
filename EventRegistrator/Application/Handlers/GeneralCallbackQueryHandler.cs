@@ -1,5 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
-using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -24,30 +24,20 @@ namespace EventRegistrator.Application.Handlers
 
         public async Task<List<Response>> HandleAsync(MessageDTO message)
         {
-            var user = _userRepository.GetUserByTargetChat(message.ChatId);
+            var user = _userRepository.GetUser(message.ChatId);
             if (user == null)
             {
                 _logger.LogWarning("User not found for chat {ChatId}", message.ChatId);
                 return new List<Response>();
             }
-
-            var stateType = CommandTypeResolver.DetermineStateType(message, user);
-            if (!stateType.HasValue)
+            if (user.State != null)
             {
-                _logger.LogWarning("Cannot determine state type for user {UserId}", user.Id);
-                return new List<Response>();
+                var response = await user.State.Execute(message, user);
+                return response;
             }
 
-            var state = _commandStateFactory.CreateState(stateType.Value);
-            if (state == null)
-            {
-                _logger.LogError("Failed to create state for type {StateType}", stateType.Value);
-                return new List<Response>();
-            }
-
-            user.State = state;
-            var response = await state.Handle(message, user);
-            return new List<Response> { response };
+            _logger.LogError("Failed to handle callback {MessageDTO}", message);
+            return [];
         }
 
         public bool CanHandle(MessageDTO message)

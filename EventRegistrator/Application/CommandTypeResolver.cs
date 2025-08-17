@@ -1,4 +1,4 @@
-﻿using EventRegistrator.Application.Enums;
+﻿using EventRegistrator.Application.Objects.Enums;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application
@@ -16,7 +16,8 @@ namespace EventRegistrator.Application
                 return CommandType.Register;
             if (message.Text.Equals(Constants.Cancel))
                 return CommandType.CancelRegistrations;
-            // ...
+            if (message.Text.Equals(Constants.Pagination))
+                return CommandType.StartPagination;
             return null;
         }
 
@@ -24,7 +25,7 @@ namespace EventRegistrator.Application
         {
             if (message.Text.Equals(Constants.EditTemplateText))
                 return StateType.EditTemplateText;
-            // ...
+            
             return null;
         }
 

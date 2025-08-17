@@ -1,4 +1,4 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Services
@@ -17,7 +17,7 @@ namespace EventRegistrator.Application.Services
                 ChatId = lastEvent.TargetChatId,
                 Text = lastEvent.TemplateText,
                 MessageToEditId = lastEvent.CommentMessageId,
-                ButtonData = (Constants.Cancel, Constants.Cancel),
+                ButtonData = new(Constants.Cancel, Constants.Cancel),
             };
 
             return [eventDataPrivateMessage, firstCommentUpdateMessage];
@@ -51,7 +51,6 @@ namespace EventRegistrator.Application.Services
                 var eventDataPrivateUpdateMessage = new Response
                 {
                     ChatId = chatId,
-                    //Text = lastEvent.TemplateText,
                     Text = TextFormatter.FormatRegistrationsInfo(lastEvent),
                     MessageToEditId = lastEvent.PrivateMessageId,
                 };

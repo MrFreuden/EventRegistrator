@@ -1,6 +1,6 @@
 ﻿using EventRegistrator.Domain.Models;
 
-namespace EventRegistrator.Application.DTOs
+namespace EventRegistrator.Application.Objects.DTOs
 {
     public class RegistrationResult
     {

@@ -1,4 +1,4 @@
-﻿namespace EventRegistrator.Application.Enums
+﻿namespace EventRegistrator.Application.Objects.Enums
 {
     public enum CommandType
     {
@@ -6,5 +6,6 @@
         Register,
         CancelRegistration,
         CancelRegistrations,
+        StartPagination,
     }
 }
