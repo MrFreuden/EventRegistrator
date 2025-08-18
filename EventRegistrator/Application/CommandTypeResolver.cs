@@ -8,6 +8,14 @@ namespace EventRegistrator.Application
         private const char _hashtag = '#';
         public static CommandType? DetermineCommandType(MessageDTO message, UserAdmin user)
         {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
             if (message.IsEdit && IsReplyToPostMessage(message, user))
                 return CommandType.CancelRegistration;
             if (IsFromChannel(message, user) && IsHasHashtag(message, user))
