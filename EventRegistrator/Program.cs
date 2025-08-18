@@ -133,10 +133,10 @@ namespace EventRegistrator
             });
             var loader = new RepositoryLoader(EnvLoader.GetDataPath());
             var userRepository = loader.LoadData();
-            EnvLoader.LoadDefaultUser1(userRepository);
-            EnvLoader.LoadDefaultUser2(userRepository);
-            EnvLoader.LoadDefaultUser3(userRepository);
-            loader.SaveDataAsync(userRepository);
+            //EnvLoader.LoadDefaultUser1(userRepository);
+            //EnvLoader.LoadDefaultUser2(userRepository);
+            //EnvLoader.LoadDefaultUser3(userRepository);
+            //loader.SaveDataAsync(userRepository);
             //userRepository.Clear();
             services.AddSingleton(loader);
             services.AddSingleton<IUserRepository>(userRepository);
@@ -185,9 +185,6 @@ namespace EventRegistrator
 
                     using var reader = new StreamReader(ctx.Request.InputStream);
                     var body = await reader.ReadToEndAsync();
-
-                    // Логируем JSON, который пришёл
-                    Log.Information("Received update JSON: {Body}", body);
 
                     var options = new JsonSerializerOptions
                     {
