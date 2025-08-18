@@ -1,5 +1,4 @@
-﻿using EventRegistrator.Application.Commands;
-using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
@@ -25,7 +24,7 @@ namespace EventRegistrator.Application.Handlers
 
         public async Task<List<Response>> HandleAsync(MessageDTO message)
         {
-            var user = _userRepository.GetUser(message.ChatId) ?? 
+            var user = _userRepository.GetUser(message.ChatId) ??
                 _userRepository.GetUserByTargetChat(message.ChatId);
             if (user == null)
             {
