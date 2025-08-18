@@ -18,5 +18,6 @@ namespace EventRegistrator.Domain.Models
         public string Name { get; }
         public DateTime RegistrationTime { get; }
         public int MessageId { get; }
+
     }
 }

@@ -7,57 +7,85 @@ namespace EventRegistrator.Infrastructure
     [Serializable]
     public class UserRepository : IUserRepository
     {
+        private readonly object _lock = new();
+        [JsonIgnore]
+        private readonly RepositoryLoader _loader;
         [JsonProperty]
         private readonly Dictionary<long, UserAdmin> _users;
 
-        public UserRepository()
+        public UserRepository(RepositoryLoader loader)
         {
+            _loader = loader;
             _users = new();
         }
 
         public void AddUser(UserAdmin user)
         {
-            if (!_users.ContainsKey(user.Id))
+            lock (_lock)
             {
-                _users[user.Id] = user;
+                if (!_users.ContainsKey(user.Id))
+                {
+                    _users[user.Id] = user;
+                }
             }
         }
 
         public void AddUser(long user)
         {
-            if (!_users.ContainsKey(user))
+            lock (_lock)
             {
-                _users[user] = new UserAdmin(user);
+                if (!_users.ContainsKey(user))
+                {
+                    _users[user] = new UserAdmin(user);
+                }
             }
         }
 
-        public UserAdmin GetUser(long id)
+        public UserAdmin? GetUser(long id)
         {
-            if (_users.TryGetValue(id, out UserAdmin? value))
+            lock (_lock)
             {
-                return value;
+                if (_users.TryGetValue(id, out UserAdmin? value))
+                {
+                    return value;
+                }
+                return null;
             }
-            throw new NotImplementedException();
         }
 
-        public UserAdmin GetUserByTargetChat(long targetChatId)
+        public UserAdmin? GetUserByTargetChat(long targetChatId)
         {
-            var user = _users.FirstOrDefault(u => u.Value.TargetChatId == targetChatId).Value;
-            if (user != null)
+            lock (_lock)
             {
+                var user = _users.FirstOrDefault(u => u.Value.ContainsTargetChat(targetChatId)).Value;
                 return user;
             }
-            throw new NotImplementedException();
         }
 
         public void Clear()
         {
-            _users.Clear();
+            lock (_lock)
+            {
+                _users.Clear();
+            }
         }
 
         public List<UserAdmin> GetAllUsers()
         {
-            return _users.Values.ToList();
+            lock (_lock)
+            {
+                return _users.Values.ToList();
+            }
+        }
+
+        public async Task Save(UserAdmin user)
+        {
+            lock (_lock)
+            {
+                _users[user.Id] = user;
+            }
+
+            await _loader.SaveDataAsync(this);
         }
     }
 }
