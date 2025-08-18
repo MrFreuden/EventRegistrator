@@ -87,10 +87,20 @@ namespace EventRegistrator
                 if (string.IsNullOrWhiteSpace(tokens[i])) { i++; continue; }
 
                 var nameParts = new List<string>();
-                while (i < tokens.Length && !IsSlotToken(tokens[i]))
+                while (i < tokens.Length && !IsSlotToken(tokens[i]) && tokens[i] != "+")
                 {
-                    nameParts.Add(tokens[i]);
-                    i++;
+                    var token = tokens[i];
+                    if (token.EndsWith("+") && token.Length > 1)
+                    {
+                        nameParts.Add(token.Substring(0, token.Length - 1));
+                        tokens[i] = "+";
+                        break;
+                    }
+                    else
+                    {
+                        nameParts.Add(token);
+                        i++;
+                    }
                 }
 
                 if (nameParts.Count == 0)
@@ -102,18 +112,24 @@ namespace EventRegistrator
                 var name = string.Join(" ", nameParts);
 
                 bool anySlot = false;
-                while (i < tokens.Length && IsSlotToken(tokens[i]))
+                while (i < tokens.Length && (IsSlotToken(tokens[i]) || tokens[i] == "+"))
                 {
                     var slotToken = tokens[i++];
+
+                    if (slotToken == "+" && slotMap != null && slotMap.Count == 1)
+                    {
+                        var slot = slotMap.First();
+                        var resolvedRegistrationTime = message.Created.Date.Add(slot.Value);
+                        result.Add(new Registration(message.UserId.Value, name, resolvedRegistrationTime, message.Id));
+                        anySlot = true;
+                        continue;
+                    }
+
                     if (TryResolveSlotToken(slotToken, message.Created, slotMap, out DateTime registrationTime))
                     {
                         result.Add(new Registration(message.UserId.Value, name, registrationTime, message.Id));
                         anySlot = true;
                     }
-                }
-
-                if (!anySlot)
-                {
                 }
             }
 
