@@ -29,9 +29,9 @@ namespace EventRegistrator.Domain.Models
             _targetChats = new();
         }
 
-        public void AddEvent(Event e)
+        public void AddEvent(Event @event)
         {
-            _events.Add(e);
+            _events.Add(@event);
         }
 
         public void AddTargetChat(TargetChat chat)

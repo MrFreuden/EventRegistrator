@@ -7,20 +7,12 @@ namespace EventRegistrator.Infrastructure
 {
     public class CallbackQueryHandler
     {
-        private readonly IUserRepository _userRepository;
         private readonly MessageSender _messageSender;
-        private readonly RepositoryLoader _repositoryLoader;
         private readonly UpdateRouter _updateRouter;
 
-        public CallbackQueryHandler(
-            IUserRepository userRepository, 
-            MessageSender messageSender, 
-            RepositoryLoader repositoryLoader, 
-            UpdateRouter updateRouter)
+        public CallbackQueryHandler(MessageSender messageSender, UpdateRouter updateRouter)
         {
-            _userRepository = userRepository;
             _messageSender = messageSender;
-            _repositoryLoader = repositoryLoader;
             _updateRouter = updateRouter;
         }
 
@@ -30,7 +22,6 @@ namespace EventRegistrator.Infrastructure
             var messageDto = UpdateMapper.Map(callbackQuery);
             var responses = await _updateRouter.RouteCallback(messageDto);
             await ProcessMessagesAsync(responses);
-            await SaveRepositoryAsync();
         }
 
         private async Task ProcessMessagesAsync(List<Response> messages)
@@ -41,11 +32,6 @@ namespace EventRegistrator.Infrastructure
 
                 message.SaveMessageIdCallback?.Invoke(sentMessage.MessageId);
             }
-        }
-
-        private async Task SaveRepositoryAsync()
-        {
-            await _repositoryLoader.SaveDataAsync(_userRepository as UserRepository);
         }
     }
 }

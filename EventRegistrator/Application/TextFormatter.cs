@@ -8,7 +8,7 @@ namespace EventRegistrator.Application
     {
         public static string FormatRegistrationsInfo(Event lastEvent)
         {
-            var slots = lastEvent.GetSlots() ?? new List<TimeSlot>();
+            var slots = lastEvent.Slots ?? new List<TimeSlot>();
 
             if (slots.Count == 0)
                 return "Нет доступных временных слотов";
@@ -88,7 +88,7 @@ namespace EventRegistrator.Application
                         sb.AppendLine($"    ID сообщения в привате: {lastEvent.PrivateMessageId}");
                         sb.AppendLine($"    ID сообщения-комментария: {lastEvent.CommentMessageId}");
                         
-                        var slots = lastEvent.GetSlots();
+                        var slots = lastEvent.Slots;
                         if (slots != null && slots.Any())
                         {
                             sb.AppendLine($"    Временные слоты ({slots.Count}):");

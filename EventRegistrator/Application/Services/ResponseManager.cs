@@ -7,7 +7,7 @@ namespace EventRegistrator.Application.Services
     {
         public List<Response> PrepareNotificationMessages(UserAdmin user, Event lastEvent)
         {
-            var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
+            var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
             lastEvent.TemplateText = text;
 
             var eventDataPrivateMessage = CreatePrivateEventSummaryMessage(user.PrivateChatId, lastEvent);

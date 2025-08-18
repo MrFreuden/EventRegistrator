@@ -23,7 +23,7 @@ namespace EventRegistrator.Application.Commands
             var resultUndo = _registrationService.CancelAllRegistrations(lastEvent, message.UserId.Value);
             if (resultUndo.Success)
             {
-                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
+                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
                 lastEvent.TemplateText = text;
             }
 

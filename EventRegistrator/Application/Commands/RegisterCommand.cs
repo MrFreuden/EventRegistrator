@@ -25,7 +25,7 @@ namespace EventRegistrator.Application.Commands
             var result = _registrationService.ProcessRegistration(lastEvent, regs);
             if (result.Success)
             {
-                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
+                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
                 lastEvent.TemplateText = text;
                 result.MessageIds = [message.Id];
                 return GetSuccessResponses(user, result);

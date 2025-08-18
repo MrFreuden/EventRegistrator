@@ -21,12 +21,12 @@ namespace EventRegistrator.Application.Services
         public MenuDescriptor Get(MenuKey key, MenuContext ctx) => key switch
         {
             MenuKey.TargetChats => new MenuDescriptor(
-                Title: (ctx) => "Выберите чат",
+                Title: (ctx) => "Виберiть канал",
                 GetItems: () => _userRepository.GetUser(ctx.ChatId).GetAllTargetChats(),
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
-                new MenuExtra("➕ Добавить чат", "chat_add",
+                new MenuExtra("➕ Добавити чат", "chat_add",
                     _ => new SwitchState(() => new AddChatState())),
                 },
                 OnItem: (ip) =>
@@ -41,13 +41,13 @@ namespace EventRegistrator.Application.Services
             ),
 
             MenuKey.Hashtags => new MenuDescriptor(
-                Title: (ctx) => $"Хэштеги чата {_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).Name}",
+                Title: (ctx) => $"Хэштеги каналу {_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).Name}",
                 GetItems: () => _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetAllHashtags(ctx.TargetChatId.Value),
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
                 new MenuExtra("➕ Добавить хэштег", "tag_add",
-                    c => new SwitchState(() => new AddHashtagState(c.TargetChatId!.Value))),
+                    c => new SwitchState(() => new AddHashtagState())),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.TargetChats, ctx with { TargetChatId = null }))
                 },

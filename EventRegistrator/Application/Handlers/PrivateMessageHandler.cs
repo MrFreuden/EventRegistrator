@@ -43,7 +43,14 @@ namespace EventRegistrator.Application.Handlers
 
             if (user.IsAsked || user.State != null || user.State as DefaultState == null)
             {
-                return await user.State.Execute(message, user);
+                var response = await user.State.Execute(message, user);
+                if (response == null || response.Count == 0)
+                {
+                    _logger.LogError("Failed to execute state. State: {State}", user.State);
+                    return new List<Response>();
+                }
+                await _userRepository.Save(user);
+                return response;
             }
 
             _logger.LogError("Failed to handle private message. Message: {@Message}", message);

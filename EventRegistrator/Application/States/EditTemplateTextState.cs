@@ -21,7 +21,7 @@ namespace EventRegistrator.Application.States
         public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
             user.IsAsked = true;
-            return new Response { ChatId = message.ChatId, Text = Constants.AskForNewTemplate, MessageToEditId = user.LastMessageId };
+            return new Response { ChatId = message.ChatId, Text = Constants.AskForNewTemplate, MessageToEditId = null };
         }
     }
 }

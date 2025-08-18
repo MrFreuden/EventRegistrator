@@ -39,6 +39,28 @@ namespace EventRegistrator.Domain.Models
 
         private bool IsTemplateValid(string text)
         {
+            if (string.IsNullOrWhiteSpace(text))
+                return false;
+
+            var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
+            {
+                var parts = line.Split('-');
+                if (parts.Length < 2)
+                    return false;
+
+                var timePart = parts[0].Trim();
+                var restPart = parts[1].Trim();
+
+                if (!TimeSpan.TryParse(timePart, out _))
+                    return false;
+
+                var numberPart = restPart.Split(' ')[0];
+                if (!int.TryParse(numberPart, out _))
+                    return false;
+            }
+
             return true;
         }
     }

@@ -148,13 +148,16 @@ namespace EventRegistrator
             return false;
         }
 
-        public static TimeSlot FindMatchingTimeSlot(List<TimeSlot> timeSlots, Registration registration)
+        public static TimeSlot FindMatchingTimeSlot(IReadOnlyCollection<TimeSlot> timeSlots, Registration registration)
         {
             if (registration.RegistrationTime.Date == DateTime.MinValue.Date)
             {
                 int slotIndex = (int)registration.RegistrationTime.Hour - 1;
                 if (slotIndex >= 0 && slotIndex < timeSlots.Count)
-                    return timeSlots[slotIndex];
+                {
+                    var timeSlotList = timeSlots.ToList();
+                    return timeSlotList[slotIndex];
+                }
                 return null;
             }
 
@@ -163,7 +166,7 @@ namespace EventRegistrator
                 slot.Time.Minute == registration.RegistrationTime.Minute);
         }
 
-        public static string UpdateTemplateText(string templateText, List<TimeSlot> timeSlots)
+        public static string UpdateTemplateText(string templateText, IReadOnlyCollection<TimeSlot> timeSlots)
         {
             if (string.IsNullOrWhiteSpace(templateText))
                 return templateText;

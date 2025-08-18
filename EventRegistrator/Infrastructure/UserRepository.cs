@@ -8,11 +8,14 @@ namespace EventRegistrator.Infrastructure
     public class UserRepository : IUserRepository
     {
         private readonly object _lock = new();
+        [JsonIgnore]
+        private readonly RepositoryLoader _loader;
         [JsonProperty]
         private readonly Dictionary<long, UserAdmin> _users;
 
-        public UserRepository()
+        public UserRepository(RepositoryLoader loader)
         {
+            _loader = loader;
             _users = new();
         }
 
@@ -73,6 +76,16 @@ namespace EventRegistrator.Infrastructure
             {
                 return _users.Values.ToList();
             }
+        }
+
+        public async Task Save(UserAdmin user)
+        {
+            lock (_lock)
+            {
+                _users[user.Id] = user;
+            }
+
+            await _loader.SaveDataAsync(this);
         }
     }
 }

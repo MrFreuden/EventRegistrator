@@ -75,6 +75,18 @@ namespace EventRegistrator.Application.States
             var pageCounterText = maxPage < 2 ? "" : $"\nСтр. {_page + 1}/{Math.Max(1, maxPage + 1)}";
 
             user.CurrentContext = _ctx;
+            if (user.LastMessageId == null)
+            {
+                return await Task.FromResult(new Response
+                {
+                    ChatId = message.ChatId,
+                    Text = d.GetItems is null
+                    ? d.Title.Invoke(_ctx)
+                    : $"{d.Title.Invoke(_ctx)}" + pageCounterText,
+                    ButtonData = new ButtonData(buttons),
+                    SaveMessageIdCallback = id => user.LastMessageId = id,
+                });
+            }
 
             return await Task.FromResult(new Response
             {

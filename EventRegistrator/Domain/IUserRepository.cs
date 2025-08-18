@@ -9,5 +9,6 @@ namespace EventRegistrator.Domain
         void Clear();
         UserAdmin GetUser(long id);
         UserAdmin GetUserByTargetChat(long targetChatId);
+        Task Save(UserAdmin user);
     }
 }

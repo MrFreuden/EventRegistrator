@@ -29,18 +29,21 @@ namespace EventRegistrator.Infrastructure
             {
                 if (!File.Exists(_path))
                 {
-                    return new UserRepository();
+                    return new UserRepository(this);
                 }
                 try
                 {
                     var jsonString = File.ReadAllText(_path);
                     if (jsonString != null) Console.WriteLine("Загрузка успешна");
-                    return JsonConvert.DeserializeObject<UserRepository>(jsonString, _settings) ?? new UserRepository();
+                    var repo = JsonConvert.DeserializeObject<UserRepository>(jsonString, _settings) ?? new UserRepository(this);
+                    typeof(UserRepository).GetField("_loader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                                                                                        ?.SetValue(repo, this);
+                    return repo;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Ошибка при загрузке данных: {ex.Message}");
-                    return new UserRepository();
+                    return new UserRepository(this);
                 }
             }
         }

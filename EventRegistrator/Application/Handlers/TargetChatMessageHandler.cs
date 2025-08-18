@@ -54,7 +54,7 @@ namespace EventRegistrator.Application.Handlers
             {
                 _logger.LogError("HandleEditAsync: failed to create second command for type {CommandType}", commandType2);
             }
-
+            await _userRepository.Save(user);
             return result;
         }
 
@@ -86,7 +86,14 @@ namespace EventRegistrator.Application.Handlers
                 return new List<Response>();
             }
             user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId);
-            return await command.Execute(message, user);
+            var response = await command.Execute(message, user);
+            if (response == null || response.Count == 0)
+            {
+                _logger.LogError("Failed to execute command. Command: {Command}", command);
+                return new List<Response>();
+            }
+            await _userRepository.Save(user);
+            return response;
         }
 
         public bool CanHandle(MessageDTO message)

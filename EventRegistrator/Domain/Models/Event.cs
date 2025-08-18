@@ -26,50 +26,35 @@ namespace EventRegistrator.Domain.Models
         public int CommentMessageId { get; set; }
         public int PrivateMessageId { get; set; }
         public string TemplateText { get; set; }
-       
+        public IReadOnlyCollection<TimeSlot> Slots => _slots.AsReadOnly();
 
         public void AddSlot(TimeSlot slot)
         {
             ArgumentNullException.ThrowIfNull(slot);
-            if (IsSlotCanBeAdded(slot))
-            {
-                _slots.Add(slot);
-            }
-            else
-            {
-                throw new ArgumentException(slot.Time.ToString());
-            }
+
+            if (_slots.Any(s => s.Time == slot.Time))
+                throw new ArgumentException($"Слот на {slot.Time} уже существует.");
+
+            _slots.Add(slot);
         }
 
-        public void AddSlots(List<TimeSlot> slots)
+        public void AddSlots(IEnumerable<TimeSlot> slots)
         {
             ArgumentNullException.ThrowIfNull(slots);
+
             foreach (var slot in slots)
             {
-                if (IsSlotCanBeAdded(slot))
-                {
-                    _slots.Add(slot);
-                }
-                else
-                {
-                    throw new ArgumentException(slot.Time.ToString());
-                }
-            }
-        }
+                if (_slots.Any(s => s.Time == slot.Time))
+                    throw new ArgumentException($"Слот на {slot.Time} уже существует.");
 
-        public bool IsSlotCanBeAdded(TimeSlot slot)
-        {
-            return _slots.FirstOrDefault(s => s.Time == slot.Time) == null;
+                _slots.Add(slot);
+            }
         }
 
         public void RemoveSlot(TimeSlot slot)
         {
+            ArgumentNullException.ThrowIfNull(slot);
             _slots.Remove(slot);
-        }
-
-        public List<TimeSlot> GetSlots()
-        {
-            return _slots;
         }
 
         public void RemoveRegistrations(int messageId)
