@@ -31,6 +31,10 @@ namespace EventRegistrator.Domain.Models
 
         public void AddEvent(Event @event)
         {
+            if (_events.Count > 6)
+            {
+                _events.RemoveRange(0, 5);
+            }
             _events.Add(@event);
         }
 

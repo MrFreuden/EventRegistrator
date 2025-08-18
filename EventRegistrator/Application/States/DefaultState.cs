@@ -20,6 +20,7 @@ namespace EventRegistrator.Application.States
 
         public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
+            user.StateHistory.Clear();
             var command = _commands[message.Text].Invoke();
             var response = command.Execute(message, user).Result.First();
             response.SaveMessageIdCallback = id => user.LastMessageId = id;
