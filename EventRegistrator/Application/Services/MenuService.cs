@@ -26,7 +26,7 @@ namespace EventRegistrator.Application.Services
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
-                new MenuExtra("➕ Добавити чат", "chat_add",
+                new MenuExtra("➕ Додати чат", "chat_add",
                     _ => new SwitchState(() => new AddChatState())),
                 },
                 OnItem: (ip) =>
@@ -46,7 +46,7 @@ namespace EventRegistrator.Application.Services
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
-                new MenuExtra("➕ Добавить хэштег", "tag_add",
+                new MenuExtra("➕ Додати хэштег", "tag_add",
                     c => new SwitchState(() => new AddHashtagState())),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.TargetChats, ctx with { TargetChatId = null }))

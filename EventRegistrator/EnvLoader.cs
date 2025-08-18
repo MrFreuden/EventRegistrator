@@ -1,10 +1,5 @@
 ﻿using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EventRegistrator
 {
@@ -39,17 +34,15 @@ namespace EventRegistrator
         {
             var userId = long.Parse(Environment.GetEnvironmentVariable("USER1_ID"));
 
-            var hashtag = new Hashtag(Environment.GetEnvironmentVariable("USER1_HASHTAGNAME"));
             var targetChat = new TargetChat(
-                long.Parse(Environment.GetEnvironmentVariable("USER1_TARGETCHATID")), 
-                long.Parse(Environment.GetEnvironmentVariable("USER1_CHANNELID")), 
+                long.Parse(Environment.GetEnvironmentVariable("USER1_TARGETCHATID")),
+                long.Parse(Environment.GetEnvironmentVariable("USER1_CHANNELID")),
                 Environment.GetEnvironmentVariable("USER1_CHANNELNAME"));
             var user = new UserAdmin(userId)
-            { 
+            {
                 PrivateChatId = userId,
             };
 
-            targetChat.AddHashtag(hashtag);
             user.AddTargetChat(targetChat);
             //user.AddTargetChat(new TargetChat(-123, -3456, "Test1"));
             //user.AddTargetChat(new TargetChat(-124, -3456, "Test2"));
@@ -65,7 +58,6 @@ namespace EventRegistrator
         {
             var userId = long.Parse(Environment.GetEnvironmentVariable("USER2_ID"));
 
-            var hashtag = new Hashtag(Environment.GetEnvironmentVariable("USER2_HASHTAGNAME"));
             var targetChat = new TargetChat(
                 long.Parse(Environment.GetEnvironmentVariable("USER2_TARGETCHATID")),
                 long.Parse(Environment.GetEnvironmentVariable("USER2_CHANNELID")),
@@ -75,7 +67,6 @@ namespace EventRegistrator
                 PrivateChatId = userId,
             };
 
-            targetChat.AddHashtag(hashtag);
             user.AddTargetChat(targetChat);
             userRepository.AddUser(user);
         }
@@ -84,7 +75,6 @@ namespace EventRegistrator
         {
             var userId = long.Parse(Environment.GetEnvironmentVariable("USER3_ID"));
 
-            var hashtag = new Hashtag(Environment.GetEnvironmentVariable("USER3_HASHTAGNAME"));
             var targetChat = new TargetChat(
                 long.Parse(Environment.GetEnvironmentVariable("USER3_TARGETCHATID")),
                 long.Parse(Environment.GetEnvironmentVariable("USER3_CHANNELID")),
@@ -94,7 +84,6 @@ namespace EventRegistrator
                 PrivateChatId = userId,
             };
 
-            targetChat.AddHashtag(hashtag);
             user.AddTargetChat(targetChat);
             userRepository.AddUser(user);
         }
