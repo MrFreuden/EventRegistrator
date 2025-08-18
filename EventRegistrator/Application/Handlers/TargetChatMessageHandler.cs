@@ -85,7 +85,7 @@ namespace EventRegistrator.Application.Handlers
                 _logger.LogError("HandleAsync: failed to create command for type {CommandType}", commandType.Value);
                 return new List<Response>();
             }
-
+            user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId);
             return await command.Execute(message, user);
         }
 

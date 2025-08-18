@@ -34,7 +34,7 @@ namespace EventRegistrator.Application.Commands
         private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result)
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
-            messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, result.MessageId));
+            messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, result.MessageIds.FirstOrDefault()));
             return messages;
         }
     }

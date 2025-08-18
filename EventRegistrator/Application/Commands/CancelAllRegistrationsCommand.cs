@@ -10,7 +10,7 @@ namespace EventRegistrator.Application.Commands
         private readonly ResponseManager _responseManager;
         private readonly RegistrationService _registrationService;
 
-        public CancelAllRegistrationsCommand(ResponseManager responseManager, RegistrationService registrationService)
+        public CancelAllRegistrationsCommand(RegistrationService registrationService, ResponseManager responseManager)
         {
             _responseManager = responseManager;
             _registrationService = registrationService;
@@ -33,7 +33,11 @@ namespace EventRegistrator.Application.Commands
         private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result)
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
-            messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, result.MessageId));
+            foreach (var id in result.MessageIds)
+            {
+                messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, id));
+            }
+            
             return messages;
         }
     }

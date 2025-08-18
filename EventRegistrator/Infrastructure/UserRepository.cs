@@ -31,13 +31,13 @@ namespace EventRegistrator.Infrastructure
             }
         }
 
-        public UserAdmin GetUser(long id)
+        public UserAdmin? GetUser(long id)
         {
             if (_users.TryGetValue(id, out UserAdmin? value))
             {
                 return value;
             }
-            throw new NotImplementedException();
+            return null;
         }
 
         public UserAdmin GetUserByTargetChat(long targetChatId)

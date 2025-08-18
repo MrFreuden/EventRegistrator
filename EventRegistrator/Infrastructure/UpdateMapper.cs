@@ -56,7 +56,7 @@ namespace EventRegistrator.Infrastructure
                 ChatId = message.ChatId,
                 Id = message.Id,
                 Text = callbackQuery.Data,
-                UserId = message.UserId,
+                UserId = callbackQuery.From.Id,
                 ReplyToMessageId = message.ReplyToMessageId,
                 Created = message.Created
             };

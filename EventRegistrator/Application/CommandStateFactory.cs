@@ -30,7 +30,7 @@ namespace EventRegistrator.Application
                 CommandType.CreateEvent => new CreateEventCommand(_eventService),
                 CommandType.Register => new RegisterCommand(_registrationService, _responseManager),
                 CommandType.CancelRegistration => new DeleteRegistrationsCommand(_registrationService, _responseManager),
-                //CommandType.StartPagination => new StartPagingCommand(),
+                CommandType.CancelRegistrations => new CancelAllRegistrationsCommand(_registrationService, _responseManager),
                 _ => throw new ArgumentException($"Неизвестный тип команды: {commandType}")
             };
         }

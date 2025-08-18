@@ -51,13 +51,13 @@ namespace EventRegistrator
 
             targetChat.AddHashtag(hashtag);
             user.AddTargetChat(targetChat);
-            user.AddTargetChat(new TargetChat(-123, -3456, "Test1"));
-            user.AddTargetChat(new TargetChat(-124, -3456, "Test2"));
-            user.AddTargetChat(new TargetChat(-125, -3456, "Test3"));
-            user.AddTargetChat(new TargetChat(-126, -3456, "Test4"));
-            user.AddTargetChat(new TargetChat(-127, -3456, "Test5"));
-            user.AddTargetChat(new TargetChat(-128, -3456, "Test6"));
-            user.AddTargetChat(new TargetChat(-129, -3456, "Test7"));
+            //user.AddTargetChat(new TargetChat(-123, -3456, "Test1"));
+            //user.AddTargetChat(new TargetChat(-124, -3456, "Test2"));
+            //user.AddTargetChat(new TargetChat(-125, -3456, "Test3"));
+            //user.AddTargetChat(new TargetChat(-126, -3456, "Test4"));
+            //user.AddTargetChat(new TargetChat(-127, -3456, "Test5"));
+            //user.AddTargetChat(new TargetChat(-128, -3456, "Test6"));
+            //user.AddTargetChat(new TargetChat(-129, -3456, "Test7"));
             userRepository.AddUser(user);
         }
 

@@ -27,7 +27,7 @@ namespace EventRegistrator.Application.Commands
             {
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.GetSlots());
                 lastEvent.TemplateText = text;
-                result.MessageId = message.Id;
+                result.MessageIds = [message.Id];
                 return GetSuccessResponses(user, result);
             }
             return [];
@@ -37,7 +37,7 @@ namespace EventRegistrator.Application.Commands
         private List<Response> GetSuccessResponses(UserAdmin user, RegistrationResult result)
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
-            messages.Add(_responseManager.CreateLikeMessage(result.Event.TargetChatId, result.MessageId));
+            messages.Add(_responseManager.CreateLikeMessage(result.Event.TargetChatId, result.MessageIds.FirstOrDefault()));
             return messages;
         }
     }

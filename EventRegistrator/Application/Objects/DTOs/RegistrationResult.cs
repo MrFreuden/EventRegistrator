@@ -6,7 +6,6 @@ namespace EventRegistrator.Application.Objects.DTOs
     {
         public bool Success { get; set; }
         public Event Event { get; set; }
-        public int MessageId { get; set; }
-
+        public List<int> MessageIds { get; set; }
     }
 }

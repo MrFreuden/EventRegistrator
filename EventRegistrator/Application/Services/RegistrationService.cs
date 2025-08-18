@@ -24,14 +24,14 @@ namespace EventRegistrator.Application.Services
         {
             @event.RemoveRegistrations(messageId);
 
-            return new RegistrationResult { Event = @event, MessageId = messageId, Success = true };
+            return new RegistrationResult { Event = @event, MessageIds = [messageId], Success = true };
         }
 
         public RegistrationResult CancelAllRegistrations(Event @event, long userId)
         {
-            @event.RemoveRegistrations(userId);
+            var ids = @event.RemoveRegistrations(userId);
 
-            return new RegistrationResult { Event = @event, Success = true };
+            return new RegistrationResult { Event = @event, Success = true, MessageIds = ids};
         }
     }
 }
