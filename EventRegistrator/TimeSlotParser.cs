@@ -8,7 +8,7 @@ namespace EventRegistrator
     {
         private static readonly Regex TokenSplit = new Regex(@"[\s,;]+");
         private static readonly Regex SlotOrTimePattern = new Regex(@"^\d{1,2}(:\d{2})?[\.\)]?$"); // 1  1.  1)  10:00 10:00.
-        private static readonly Regex TemplateRegex = new Regex(@"(\d{1,2}[:\.]\d{2})\s*[-–]\s*(\d+)\s+вільних місць", RegexOptions.Compiled);
+        private static readonly Regex TemplateRegex = new Regex(@"(?:.*?)(\d{1,2}[:\.]\d{2})\s*[-–]\s*(\d+)\s+вільних місць", RegexOptions.Compiled);
 
         public static List<TimeSlot> ExtractTimeSlotsFromTemplate(string templateText, DateTime eventDate)
         {

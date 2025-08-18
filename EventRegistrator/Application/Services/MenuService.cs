@@ -63,7 +63,7 @@ namespace EventRegistrator.Application.Services
 
             MenuKey.HashtagDetails => new MenuDescriptor(
                 Title: ctx =>
-        $"Шаблон для хэштегу {ctx.HashtagName}\n{_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).GetHashtagByName(ctx.HashtagName).TemplateText}",
+        $"Шаблон для хэштегу #{ctx.HashtagName}\n{_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).GetHashtagByName(ctx.HashtagName).TemplateText}",
                 GetItems: null,
                 PageSize: _maxObjPerPage,
                 Extras: new[]

@@ -53,7 +53,11 @@ namespace EventRegistrator.Domain.Models
                 var timePart = parts[0].Trim();
                 var restPart = parts[1].Trim();
 
-                if (!TimeSpan.TryParse(timePart, out _))
+                var match = System.Text.RegularExpressions.Regex.Match(timePart, @"\b\d{1,2}[:\.]\d{2}\b");
+                if (!match.Success)
+                    return false;
+
+                if (!TimeSpan.TryParse(match.Value.Replace('.', ':'), out _))
                     return false;
 
                 var numberPart = restPart.Split(' ')[0];

@@ -19,6 +19,11 @@ namespace EventRegistrator.Application.Commands
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
             var lastEvent = user.GetLastEvent();
+            if (lastEvent.PostId != message.ReplyToMessageId)
+            {
+                Console.WriteLine("Попытка зарегистрировать на другой пост");
+                return [];
+            }
             var map = TimeSlotParser.GetMaper(lastEvent.TemplateText);
             var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
 
