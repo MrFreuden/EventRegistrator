@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace EventRegistrator
+namespace EventRegistrator.Domain.Models
 {
     [Serializable]
     public class Registration
@@ -18,5 +18,6 @@ namespace EventRegistrator
         public string Name { get; }
         public DateTime RegistrationTime { get; }
         public int MessageId { get; }
+
     }
 }

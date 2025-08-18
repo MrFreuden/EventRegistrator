@@ -1,134 +1,251 @@
-﻿using DotNetEnv;
+﻿using EventRegistrator.Application;
+using EventRegistrator.Application.Handlers;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Services;
+using EventRegistrator.Domain;
+using EventRegistrator.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace EventRegistrator
 {
     internal class Program
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        const uint SWP_NOSIZE = 0x0001;
+        const uint SWP_NOZORDER = 0x0004;
+        const uint SWP_SHOWWINDOW = 0x0040;
+        static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         static async Task Main(string[] args)
         {
-            var apiToken = GetApiToken();
-            Console.WriteLine("Getting api token");
-            await Run(apiToken);
-        }
-
-        private static string GetApiToken()
-        {
             DotNetEnv.Env.Load();
-            string? apiToken = Environment.GetEnvironmentVariable("API_TOKEN");
-            if (apiToken == null) throw new ArgumentNullException(apiToken);
-            return apiToken;
-        }
 
-        private static async Task Run(string apiToken)
-        {
-            using var cts = new CancellationTokenSource();
-            var listener = ConfigureHttpListener();
-            var bot = ConfigureBot(apiToken, cts);
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
-            var httpTask = HandleHttpRequestsAsync(listener, cts);
-            var shutdownTask = HandleShutdownAsync(cts);
+            var loggerConfig = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console();
+
+            if (env == "Development")
+                loggerConfig = loggerConfig.WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day);
+
+            Log.Logger = loggerConfig.CreateLogger();
 
             try
             {
-                await Task.WhenAny(httpTask, shutdownTask);
+                Log.Information("Starting application (env: {Env})", env);
+
+                var apiToken = Environment.GetEnvironmentVariable("API_TOKEN")
+                    ?? throw new InvalidOperationException("API_TOKEN not set");
+
+                var services = new ServiceCollection();
+
+                services.AddLogging(b => b.ClearProviders().AddSerilog(dispose: true));
+
+                var bot = new TelegramBotClient(apiToken);
+                services.AddSingleton<ITelegramBotClient>(bot);
+
+                RegisterAppServices(services);
+
+                var sp = services.BuildServiceProvider();
+                var messageHandler = sp.GetRequiredService<MessageHandler>();
+                var callbackQueryHandler = sp.GetRequiredService<CallbackQueryHandler>();
+                var botHandler = new BotHandler(messageHandler, callbackQueryHandler);
+
+                if (env == "Development")
+                {
+                    await RunPolling(bot, botHandler);
+                }
+                else
+                {
+                    var webhookUrl = Environment.GetEnvironmentVariable("WEBHOOK_URL")
+                        ?? throw new InvalidOperationException("WEBHOOK_URL not set");
+                    await RunWebhook(bot, botHandler, webhookUrl);
+                }
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
-                Console.WriteLine("Application is shutting down...");
+                Log.Fatal(ex, "Application terminated unexpectedly");
             }
             finally
             {
-                StopServices(listener, cts);
+                Log.CloseAndFlush();
             }
-            Console.WriteLine("All services stopped.");
         }
 
-        private static HttpListener ConfigureHttpListener()
+        private static void MoveConsoleToSecondMonitor()
         {
+            var hWnd = GetConsoleWindow();
+            int x = 400;
+            int y = 1200;
+            SetWindowPos(hWnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
+        }
+
+        private static async Task RunPolling(ITelegramBotClient bot, BotHandler handler)
+        {
+            MoveConsoleToSecondMonitor();
+            using var cts = new CancellationTokenSource();
+            Log.Information("Starting in polling mode...");
+            bot.StartReceiving(handler.HandleUpdateAsync, handler.HandleErrorAsync, cancellationToken: cts.Token);
+            Log.Information("Bot is running (polling). Press Ctrl+C to exit.");
+            await WaitForShutdown(cts);
+            Log.Information("Polling stopped.");
+        }
+
+        private static async Task RunWebhook(ITelegramBotClient bot, BotHandler handler, string webhookUrl)
+        {
+            using var cts = new CancellationTokenSource();
+            Log.Information("Setting webhook to {Url}", webhookUrl);
+
+            await bot.SetWebhook(webhookUrl);
+
             var listener = new HttpListener();
             var port = "8080";
-            listener.Prefixes.Add($"http://localhost:{port}/");
+            listener.Prefixes.Add($"http://+:{port}/");
             listener.Start();
-            Console.WriteLine($"Listening on port {port}...");
-            return listener;
+            Log.Information("Listening HTTP on port {Port}", port);
+
+            var httpTask = HandleHttp(listener, bot, handler, cts.Token);
+            var shutdownTask = WaitForShutdown(cts);
+            await Task.WhenAny(httpTask, shutdownTask);
+
+            try { listener.Stop(); } catch { /* ignore */ }
+            Log.Information("Webhook stopped.");
         }
 
-        private static TelegramBotClient ConfigureBot(string apiToken, CancellationTokenSource cancellationToken)
+        private static void RegisterAppServices(ServiceCollection services)
         {
-            var bot = new TelegramBotClient(apiToken);
+            services.AddLogging(builder =>
+            {
+                builder.ClearProviders();
+                builder.AddSerilog();
+            });
             var loader = new RepositoryLoader(EnvLoader.GetDataPath());
             var userRepository = loader.LoadData();
-
             //EnvLoader.LoadDefaultUser1(userRepository);
             //EnvLoader.LoadDefaultUser2(userRepository);
             //EnvLoader.LoadDefaultUser3(userRepository);
             //loader.SaveDataAsync(userRepository);
             //userRepository.Clear();
-            var messageSender = new MessageSender(bot);
+            services.AddSingleton(loader);
+            services.AddSingleton<IUserRepository>(userRepository);
+            services.AddSingleton(userRepository);
 
-            var handler = new BotHandler(new MessageHandler(userRepository, messageSender), new CallbackQueryHandler(userRepository, messageSender));
-            Console.WriteLine("Starting bot...");
-            bot.StartReceiving(handler.HandleUpdateAsync, handler.HandleErrorAsync, cancellationToken: cancellationToken.Token);
-            Console.WriteLine("Bot is running.");
-            return bot;
+            services.AddSingleton<MessageSender>();
+            services.AddSingleton<EventService>();
+            services.AddSingleton<RegistrationService>();
+            services.AddSingleton<ResponseManager>();
+            services.AddSingleton<ICommandFactory, CommandStateFactory>();
+            services.AddSingleton<IStateFactory, CommandStateFactory>();
+            services.AddSingleton<CommandStateFactory>();
+            services.AddSingleton<PrivateMessageHandler>();
+            services.AddSingleton<TargetChatMessageHandler>();
+            services.AddSingleton<GeneralCallbackQueryHandler>();
+            services.AddSingleton<UpdateRouter>(sp =>
+                new UpdateRouter(
+                    new IHandler[] {
+                        sp.GetRequiredService<PrivateMessageHandler>(),
+                        sp.GetRequiredService<TargetChatMessageHandler>()
+                    },
+                    new IHandler[] {
+                        sp.GetRequiredService<GeneralCallbackQueryHandler>(),
+                    },
+                    sp.GetRequiredService<ILogger<UpdateRouter>>()
+                ));
+            services.AddSingleton<MessageHandler>();
+            services.AddSingleton<CallbackQueryHandler>();
         }
 
-        private static void AddDefaultUsers(UserRepository userRepository)
+        private static async Task HandleHttp(HttpListener listener, ITelegramBotClient bot, BotHandler handler, CancellationToken token)
         {
-
-        }
-
-        private static async Task HandleHttpRequestsAsync(HttpListener listener, CancellationTokenSource cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
+                HttpListenerContext? ctx = null;
                 try
                 {
-                    var context = await listener.GetContextAsync();
-                    Console.WriteLine($"Received HTTP request: {context.Request.RawUrl}");
-                    context.Response.StatusCode = 200;
-                    await using var writer = new StreamWriter(context.Response.OutputStream);
-                    await writer.WriteAsync("OK");
+                    ctx = await listener.GetContextAsync();
+                    if (ctx.Request.HttpMethod != "POST")
+                    {
+                        ctx.Response.StatusCode = 200;
+                        await ctx.Response.OutputStream.FlushAsync();
+                        ctx.Response.Close();
+                        continue;
+                    }
+
+                    using var reader = new StreamReader(ctx.Request.InputStream);
+                    var body = await reader.ReadToEndAsync();
+
+                    Update? update = null;
+                    try
+                    {
+                        update = JsonSerializer.Deserialize<Update>(body);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Failed to deserialize Update");
+                    }
+
+                    if (update != null)
+                    {
+                        await handler.HandleUpdateAsync(bot, update, token);
+                    }
+                    else
+                    {
+                        Log.Warning("Received POST without valid Update");
+                    }
+
+                    ctx.Response.StatusCode = 200;
+                    await ctx.Response.OutputStream.FlushAsync();
+                    ctx.Response.Close();
                 }
                 catch (HttpListenerException ex) when (ex.ErrorCode == 995)
                 {
-                    Console.WriteLine("Listener stopped.");
+                    Log.Information("HttpListener stopped");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Unhandled error in HTTP handler");
+                    if (ctx != null)
+                    {
+                        try
+                        {
+                            ctx.Response.StatusCode = 500;
+                            await ctx.Response.OutputStream.FlushAsync();
+                            ctx.Response.Close();
+                        }
+                        catch { /* ignore */ }
+                    }
                 }
             }
         }
-
-        private static async Task HandleShutdownAsync(CancellationTokenSource cts)
+        private static async Task WaitForShutdown(CancellationTokenSource cts)
         {
-            EventHandler processExitHandler = (_, _) => CancelTokenSafely(cts);
-            ConsoleCancelEventHandler cancelKeyPressHandler = (_, e) =>
-            {
-                e.Cancel = true;
-                CancelTokenSafely(cts);
-            };
+            EventHandler onExit = (_, _) => CancelTokenSafely(cts);
+            ConsoleCancelEventHandler onCancel = (_, e) => { e.Cancel = true; CancelTokenSafely(cts); };
 
-            AppDomain.CurrentDomain.ProcessExit += processExitHandler;
-            Console.CancelKeyPress += cancelKeyPressHandler;
+            AppDomain.CurrentDomain.ProcessExit += onExit;
+            Console.CancelKeyPress += onCancel;
             try
             {
-                await Task.Delay(-1, cts.Token);
+                await Task.Delay(Timeout.Infinite, cts.Token);
             }
-            catch (TaskCanceledException)
-            {
-            }
+            catch (TaskCanceledException) { }
             finally
             {
-                AppDomain.CurrentDomain.ProcessExit -= processExitHandler;
-                Console.CancelKeyPress -= cancelKeyPressHandler;
+                AppDomain.CurrentDomain.ProcessExit -= onExit;
+                Console.CancelKeyPress -= onCancel;
             }
-        }
-
-        private static void StopServices(HttpListener listener, CancellationTokenSource cts)
-        {
-            Console.WriteLine("Stopping services...");
-            CancelTokenSafely(cts);
-            listener.Stop();
         }
 
         private static void CancelTokenSafely(CancellationTokenSource cts)

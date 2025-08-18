@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace EventRegistrator
+namespace EventRegistrator.Domain.Models
 {
     [Serializable]
     public class TimeSlot
@@ -24,7 +24,7 @@ namespace EventRegistrator
 
         public bool CanRegister(Registration registration)
         {
-            if (CurrentRegistrationCount == MaxCapacity || HasUser(registration.UserId))
+            if (CurrentRegistrationCount == MaxCapacity || HasUser(registration.Name))
             {
                 return false;
             }
@@ -46,7 +46,7 @@ namespace EventRegistrator
 
         public void RemoveRegistration(Registration registration)
         {
-            if (HasUser(registration.UserId))
+            if (HasUser(registration.Name))
             {
                 _currentRegistrations.Remove(registration);
             }
@@ -85,9 +85,9 @@ namespace EventRegistrator
 
             MaxCapacity = capacity;
         }
-        private bool HasUser(long userId)
+        private bool HasUser(string name)
         {
-            return _currentRegistrations.FirstOrDefault(r => r.UserId == userId) != null;
+            return _currentRegistrations.FirstOrDefault(r => r.Name == name) != null;
         }
 
         public Registration GetRegistration(int messageId)

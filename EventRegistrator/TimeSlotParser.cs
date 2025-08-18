@@ -1,4 +1,4 @@
-﻿using Sprache;
+﻿using EventRegistrator.Domain.Models;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -60,7 +60,7 @@ namespace EventRegistrator
                 var match = TemplateRegex.Match(line);
                 if (match.Success)
                 {
-                    string timeStr = match.Groups[1].Value.Replace('.', ':');    
+                    string timeStr = match.Groups[1].Value.Replace('.', ':');
 
                     if (TimeSpan.TryParse(timeStr, out TimeSpan time))
                     {
@@ -74,12 +74,12 @@ namespace EventRegistrator
         }
 
 
-        public static List<Registration> ParseRegistrationMessage(string input, long userId, DateTime eventDate, Dictionary<int, TimeSpan> slotMap, int messageId)
+        public static List<Registration> ParseRegistrationMessage(MessageDTO message, Dictionary<int, TimeSpan> slotMap)
         {
             var result = new List<Registration>();
-            if (string.IsNullOrWhiteSpace(input)) return result;
+            if (string.IsNullOrWhiteSpace(message.Text)) return result;
 
-            var tokens = TokenSplit.Split(input.Trim());
+            var tokens = TokenSplit.Split(message.Text.Trim());
             int i = 0;
 
             while (i < tokens.Length)
@@ -87,10 +87,20 @@ namespace EventRegistrator
                 if (string.IsNullOrWhiteSpace(tokens[i])) { i++; continue; }
 
                 var nameParts = new List<string>();
-                while (i < tokens.Length && !IsSlotToken(tokens[i]))
+                while (i < tokens.Length && !IsSlotToken(tokens[i]) && tokens[i] != "+")
                 {
-                    nameParts.Add(tokens[i]);
-                    i++;
+                    var token = tokens[i];
+                    if (token.EndsWith("+") && token.Length > 1)
+                    {
+                        nameParts.Add(token.Substring(0, token.Length - 1));
+                        tokens[i] = "+";
+                        break;
+                    }
+                    else
+                    {
+                        nameParts.Add(token);
+                        i++;
+                    }
                 }
 
                 if (nameParts.Count == 0)
@@ -102,18 +112,24 @@ namespace EventRegistrator
                 var name = string.Join(" ", nameParts);
 
                 bool anySlot = false;
-                while (i < tokens.Length && IsSlotToken(tokens[i]))
+                while (i < tokens.Length && (IsSlotToken(tokens[i]) || tokens[i] == "+"))
                 {
                     var slotToken = tokens[i++];
-                    if (TryResolveSlotToken(slotToken, eventDate, slotMap, out DateTime registrationTime))
+
+                    if (slotToken == "+" && slotMap != null && slotMap.Count == 1)
                     {
-                        result.Add(new Registration(userId, name, registrationTime, messageId));
+                        var slot = slotMap.First();
+                        var resolvedRegistrationTime = message.Created.Date.Add(slot.Value);
+                        result.Add(new Registration(message.UserId.Value, name, resolvedRegistrationTime, message.Id));
+                        anySlot = true;
+                        continue;
+                    }
+
+                    if (TryResolveSlotToken(slotToken, message.Created, slotMap, out DateTime registrationTime))
+                    {
+                        result.Add(new Registration(message.UserId.Value, name, registrationTime, message.Id));
                         anySlot = true;
                     }
-                }
-
-                if (!anySlot)
-                {
                 }
             }
 
@@ -148,13 +164,16 @@ namespace EventRegistrator
             return false;
         }
 
-        public static TimeSlot FindMatchingTimeSlot(List<TimeSlot> timeSlots, Registration registration)
+        public static TimeSlot FindMatchingTimeSlot(IReadOnlyCollection<TimeSlot> timeSlots, Registration registration)
         {
             if (registration.RegistrationTime.Date == DateTime.MinValue.Date)
             {
                 int slotIndex = (int)registration.RegistrationTime.Hour - 1;
                 if (slotIndex >= 0 && slotIndex < timeSlots.Count)
-                    return timeSlots[slotIndex];
+                {
+                    var timeSlotList = timeSlots.ToList();
+                    return timeSlotList[slotIndex];
+                }
                 return null;
             }
 
@@ -163,7 +182,7 @@ namespace EventRegistrator
                 slot.Time.Minute == registration.RegistrationTime.Minute);
         }
 
-        public static string UpdateTemplateText(string templateText, List<TimeSlot> timeSlots)
+        public static string UpdateTemplateText(string templateText, IReadOnlyCollection<TimeSlot> timeSlots)
         {
             if (string.IsNullOrWhiteSpace(templateText))
                 return templateText;
