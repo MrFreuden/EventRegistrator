@@ -186,10 +186,18 @@ namespace EventRegistrator
                     using var reader = new StreamReader(ctx.Request.InputStream);
                     var body = await reader.ReadToEndAsync();
 
+                    // Логируем JSON, который пришёл
+                    Log.Information("Received update JSON: {Body}", body);
+
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+
                     Update? update = null;
                     try
                     {
-                        update = JsonSerializer.Deserialize<Update>(body);
+                        update = JsonSerializer.Deserialize<Update>(body, options);
                     }
                     catch (Exception ex)
                     {
