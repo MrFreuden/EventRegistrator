@@ -47,5 +47,6 @@ namespace EventRegistrator.Infrastructure
             Console.WriteLine(exception);
             await Task.Delay(2000, cancellationToken);
         }
+
     }
 }
