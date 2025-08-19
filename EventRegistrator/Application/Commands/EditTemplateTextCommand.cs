@@ -11,7 +11,7 @@ namespace EventRegistrator.Application.Commands
             user.IsAsked = false;
             var hashtag = user.GetTargetChat(user.CurrentContext.TargetChatId.Value).GetHashtagByName(user.CurrentContext.HashtagName);
             hashtag.EditTemplateText(message.Text);
-            user.State = user.StateHistory.Pop();
+            user.RevertState();
             return [await user.State.Handle(message, user)];
         }
     }

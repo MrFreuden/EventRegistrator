@@ -21,13 +21,12 @@ namespace EventRegistrator.Application.Commands
 
         public Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            user.StateHistory.Clear();
-            user.State = new MenuState(
+            user.ClearStateHistory();
+            user.SetCurrentState(new MenuState(
                 menuService: new MenuService(_userRepository),
                 key: _key,
                 ctx: new MenuContext(message.ChatId),
-                startPage: 0
-            );
+                startPage: 0));
             return Task.FromResult(new List<Response> { user.State.Handle(message, user).Result });
         }
     }

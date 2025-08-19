@@ -11,14 +11,15 @@ namespace EventRegistrator.Domain.Models
         private readonly List<Event> _events;
         [JsonProperty]
         private readonly Dictionary<long, TargetChat> _targetChats;
+        [JsonIgnore]
+        private readonly Stack<IState> _stateHistory = new();
+        [JsonIgnore]
+        private IState _state;
+        [JsonIgnore]
+        public IState State => _state;
         public long Id { get; set; }
         public long PrivateChatId { get; set; }
         public bool IsAsked { get; set; }
-
-        [JsonIgnore]
-        public Stack<IState> StateHistory = new();
-        [JsonIgnore]
-        public IState State { get; set; }
         public MenuContext CurrentContext { get; set; }
         public int? LastMessageId { get; set; }
 
@@ -38,21 +39,51 @@ namespace EventRegistrator.Domain.Models
             _events.Add(@event);
         }
 
-        public void AddTargetChat(TargetChat chat)
-        {
-            ArgumentNullException.ThrowIfNull(chat);
-            _targetChats[chat.Id] = chat;
-        }
-
         public Event GetLastEvent()
         {
             return _events.Last();
+        }
+
+        public void AddTargetChat(TargetChat chat)
+        {
+            //ArgumentNullException.ThrowIfNull(chat);
+            _targetChats[chat.Id] = chat;
         }
 
         public TargetChat GetTargetChat(long targetChatId)
         {
             return _targetChats[targetChatId];
         }
+
+        public IReadOnlyCollection<TargetChat> GetAllTargetChats()
+        {
+            return _targetChats.Values;
+        }
+
+        public IReadOnlyCollection<Hashtag> GetAllHashtags(long targetChatId)
+        {
+            return _targetChats[targetChatId].GetAllHashtags();
+        }
+
+        public void SetCurrentState(IState state)
+        {
+            if (_state != null)
+                _stateHistory.Push(_state);
+            _state = state;
+        }
+
+        public IState? RevertState()
+        {
+            if (_stateHistory.Count > 0)
+            {
+                _state = _stateHistory.Pop();
+                return _state;
+            }
+
+            return null;
+        }
+        
+        public void ClearStateHistory() => _stateHistory.Clear();
 
         public bool ContainsTargetChat(long id)
         {
@@ -81,16 +112,6 @@ namespace EventRegistrator.Domain.Models
                 }
             }
             return false;
-        }
-
-        public IReadOnlyCollection<TargetChat> GetAllTargetChats()
-        {
-            return _targetChats.Values;
-        }
-
-        public IReadOnlyCollection<Hashtag> GetAllHashtags(long targetChatId)
-        {
-            return _targetChats[targetChatId].GetAllHashtags();
         }
     }
 }

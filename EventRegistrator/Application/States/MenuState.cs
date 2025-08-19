@@ -112,13 +112,11 @@ namespace EventRegistrator.Application.States
             switch (action)
             {
                 case NavigateMenu nm:
-                    user.StateHistory.Push(this);
-                    user.State = new MenuState(_menuService, nm.NextKey, nm.Ctx, nm.StartPage);
+                    user.SetCurrentState(new MenuState(_menuService, nm.NextKey, nm.Ctx, nm.StartPage));
                     return [await user.State.Handle(message, user)];
 
                 case SwitchState ss:
-                    user.StateHistory.Push(this);
-                    user.State = ss.Factory();
+                    user.SetCurrentState(ss.Factory());
                     return [await user.State.Handle(message, user)];
 
                 case RunCommand rc:

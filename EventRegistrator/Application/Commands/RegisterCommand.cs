@@ -24,6 +24,7 @@ namespace EventRegistrator.Application.Commands
                 Console.WriteLine("Попытка зарегистрировать на другой пост");
                 return [];
             }
+            user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId);
             var map = TimeSlotParser.GetMaper(lastEvent.TemplateText);
             var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
 
