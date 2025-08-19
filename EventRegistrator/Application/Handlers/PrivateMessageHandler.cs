@@ -34,7 +34,7 @@ namespace EventRegistrator.Application.Handlers
                 _logger.LogWarning("User not found for chat {ChatId}", message.ChatId);
                 return new List<Response>();
             }
-            user.LastMessageId = null;
+            
             if (IsCommand(message))
             {
                 var defaultState = new DefaultState(_commands);
@@ -60,12 +60,6 @@ namespace EventRegistrator.Application.Handlers
         public bool CanHandle(MessageDTO message)
         {
             return IsPrivateMessage(message);
-        }
-
-        private bool IsUserAsked(MessageDTO message)
-        {
-            var user = _userRepository.GetUser(message.ChatId);
-            return user.IsAsked;
         }
 
         private bool IsCommand(MessageDTO message)
