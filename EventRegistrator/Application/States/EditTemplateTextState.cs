@@ -10,10 +10,10 @@ namespace EventRegistrator.Application.States
 {
     public class EditTemplateTextState : IState
     {
-        private readonly EditTemplateTextCommand _editTemplateTextCommand;
+        private readonly EditUserTemplateTextCommand _editTemplateTextCommand;
         public EditTemplateTextState()
         {
-            _editTemplateTextCommand = new EditTemplateTextCommand();
+            _editTemplateTextCommand = new EditUserTemplateTextCommand();
         }
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {

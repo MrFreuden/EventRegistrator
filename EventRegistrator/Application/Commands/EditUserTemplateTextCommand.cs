@@ -1,12 +1,11 @@
 ﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Commands
 {
-    public class EditTemplateTextCommand : ICommand
+    public class EditUserTemplateTextCommand : ICommand
     {
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {

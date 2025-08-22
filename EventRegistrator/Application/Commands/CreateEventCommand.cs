@@ -20,6 +20,7 @@ namespace EventRegistrator.Application.Commands
         {
             var @event = EventService.Create(message);
             @event.UpdateTemplate(user.GetTargetChat(user.CurrentContext.TargetChatId.Value).GetHashtagByName(@event.HashtagName).TemplateText);
+            @event.AddSlots(TimeSlotParser.ExtractTimeSlotsFromTemplate(@event.TemplateText));
             var result = _eventService.AddNewEvent(@event, message.Created);
             if (result.Success)
             {
