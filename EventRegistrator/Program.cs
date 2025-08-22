@@ -1,10 +1,12 @@
-﻿using EventRegistrator.Application;
-using EventRegistrator.Application.Commands;
+﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.Factories;
 using EventRegistrator.Application.Handlers;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
-using EventRegistrator.Domain;
+using EventRegistrator.Domain.Interfaces;
 using EventRegistrator.Infrastructure;
+using EventRegistrator.Infrastructure.Config;
+using EventRegistrator.Infrastructure.Telegram;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;

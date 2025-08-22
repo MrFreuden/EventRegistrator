@@ -1,7 +1,8 @@
-﻿using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Domain;
-using EventRegistrator.Domain.Models;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Enums;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Handlers
@@ -37,7 +38,7 @@ namespace EventRegistrator.Application.Handlers
             }
             if (message.Text.StartsWith("Cancel"))
             {
-                var cancelCommand = _commandFactory.CreateCommand(Objects.Enums.CommandType.CancelRegistrations);
+                var cancelCommand = _commandFactory.CreateCommand(CommandType.CancelRegistrations);
                 return await cancelCommand.Execute(message, user);
             }
             _logger.LogError("Failed to handle callback {MessageDTO}", message.Text);

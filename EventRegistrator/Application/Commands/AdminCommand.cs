@@ -1,8 +1,10 @@
-﻿using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Domain;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Interfaces;
 using EventRegistrator.Domain.Models;
-using EventRegistrator.Infrastructure;
+using EventRegistrator.Infrastructure.Persistence;
+using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.Commands
 {

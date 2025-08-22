@@ -1,5 +1,5 @@
-using EventRegistrator;
-using EventRegistrator.Domain.Models;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Infrastructure.Utils;
 
 namespace TimeSlotParserTests
 {

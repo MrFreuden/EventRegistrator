@@ -1,8 +1,10 @@
 ﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Application.Services;
+using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
+using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.States
 {

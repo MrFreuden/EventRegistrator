@@ -1,9 +1,9 @@
 ﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
 using EventRegistrator.Application.States;
-using EventRegistrator.Domain;
-using EventRegistrator.Domain.Models;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Handlers
