@@ -91,4 +91,26 @@ namespace EventRegistrator.Infrastructure
             return prop;
         }
     }
+    public class TimeSpanOrDateTimeConverter : JsonConverter<TimeSpan>
+    {
+        public override TimeSpan ReadJson(JsonReader reader, Type objectType, TimeSpan existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            var value = reader.Value?.ToString();
+            if (string.IsNullOrWhiteSpace(value))
+                return default;
+
+            if (TimeSpan.TryParse(value, out var ts))
+                return ts;
+
+            if (DateTime.TryParse(value, out var dt))
+                return dt.TimeOfDay;
+
+            throw new JsonSerializationException($"Не удалось преобразовать '{value}' в TimeSpan.");
+        }
+
+        public override void WriteJson(JsonWriter writer, TimeSpan value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value.ToString());
+        }
+    }
 }

@@ -25,7 +25,9 @@ namespace EventRegistrator.Domain.Models
         public int PostId { get; }
         public int CommentMessageId { get; set; }
         public int PrivateMessageId { get; set; }
-        public string TemplateText { get; set; }
+        [JsonProperty]
+        private string _templateText;
+        public string TemplateText => _templateText;
         public IReadOnlyCollection<TimeSlot> Slots => _slots.AsReadOnly();
 
         public void AddSlot(TimeSlot slot)
@@ -84,6 +86,36 @@ namespace EventRegistrator.Domain.Models
         {
             var slot = TimeSlotParser.FindMatchingTimeSlot(_slots, registration);
             return slot.AddRegistration(registration);
+        }
+
+        public void UpdateTemplate(string text)
+        {
+            _templateText = text;
+        }
+
+        public void EditTemplate(string text)
+        {
+            var values = TimeSlotParser.ParseTemplate(text);
+            if (_slots.Any(s => s.CurrentRegistrationCount > 0) && values.Count < _slots.Count)
+            {
+                Console.WriteLine("Попытка обновить шаблон в котором есть записи убрав слоты");
+                return;
+            }
+
+
+            var i = 0;
+            for (; i < _slots.Count; i++)
+            {
+                _slots[i].EditTime(values[i].time);
+                _slots[i].EditCapacity(values[i].capacity);
+            }
+
+            for (; i < values.Count; i++)
+            {
+                AddSlot(new TimeSlot(values[i].time, values[i].capacity));
+            }
+
+            _templateText = TimeSlotParser.UpdateTemplateText(text, _slots);
         }
     }
 }

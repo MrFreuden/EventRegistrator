@@ -21,7 +21,7 @@ namespace EventRegistrator.Application
 
             foreach (var slot in slots)
             {
-                sb.AppendLine($"{slot.Time:HH:mm}");
+                sb.AppendLine($"{slot.Time.ToString(@"hh\:mm")}");
 
                 var registrations = GetRegistrationsFromTimeSlot(slot);
 
@@ -70,7 +70,6 @@ namespace EventRegistrator.Application
             {
                 sb.AppendLine($"===== Пользователь ID: {user.Id} =====");
                 sb.AppendLine($"Приватный чат ID: {user.PrivateChatId}");
-                sb.AppendLine($"Режим ожидания ввода: {(user.IsAsked ? "Да" : "Нет")}");
                 
                 // Получаем событие пользователя через доступный метод GetLastEvent
                 try
@@ -95,7 +94,7 @@ namespace EventRegistrator.Application
                             foreach (var slot in slots.OrderBy(s => s.Time))
                             {
                                 var regs = GetRegistrationsFromTimeSlot(slot);
-                                sb.AppendLine($"      - {slot.Time:HH:mm} (Занято: {slot.CurrentRegistrationCount}/{slot.MaxCapacity})");
+                                sb.AppendLine($"      - {slot.Time.ToString(@"hh\:mm")} (Занято: {slot.CurrentRegistrationCount}/{slot.MaxCapacity})");
                                 
                                 if (regs.Any())
                                 {

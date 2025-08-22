@@ -24,7 +24,7 @@ namespace EventRegistrator.Application.Commands
                 Console.WriteLine("Попытка зарегистрировать на другой пост");
                 return [];
             }
-            user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId);
+            //user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId, lastEvent.HashtagName);
             var map = TimeSlotParser.GetMaper(lastEvent.TemplateText);
             var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
 
@@ -32,7 +32,7 @@ namespace EventRegistrator.Application.Commands
             if (result.Success)
             {
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
-                lastEvent.TemplateText = text;
+                lastEvent.UpdateTemplate(text);
                 result.MessageIds = [message.Id];
                 return GetSuccessResponses(user, result);
             }

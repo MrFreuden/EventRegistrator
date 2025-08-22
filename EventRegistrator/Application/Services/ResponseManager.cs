@@ -7,9 +7,6 @@ namespace EventRegistrator.Application.Services
     {
         public List<Response> PrepareNotificationMessages(UserAdmin user, Event lastEvent)
         {
-            var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
-            lastEvent.TemplateText = text;
-
             var eventDataPrivateMessage = CreatePrivateEventSummaryMessage(user.PrivateChatId, lastEvent);
 
             var firstCommentUpdateMessage = new Response
@@ -30,6 +27,7 @@ namespace EventRegistrator.Application.Services
                 ChatId = lastEvent.TargetChatId,
                 Text = lastEvent.TemplateText,
                 MessageToEditId = lastEvent.CommentMessageId,
+                ButtonData = new(Constants.Cancel, Constants.Cancel),
             };
             return firstCommentUpdateMessage;
         }

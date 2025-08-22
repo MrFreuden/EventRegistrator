@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using EventRegistrator.Infrastructure;
+using Newtonsoft.Json;
 
 namespace EventRegistrator.Domain.Models
 {
@@ -6,17 +7,19 @@ namespace EventRegistrator.Domain.Models
     public class Registration
     {
         [JsonConstructor]
-        public Registration(long userId, string name, DateTime registrationTime, int messageId)
+        public Registration(long userId, string name, TimeSpan registrationTime, int messageId)
         {
             UserId = userId;
             Name = name;
-            RegistrationTime = registrationTime;
+            RegistrationOnTime = registrationTime;
             MessageId = messageId;
         }
 
         public long UserId { get; }
         public string Name { get; }
-        public DateTime RegistrationTime { get; }
+        [JsonProperty("RegistrationTime")]
+        [JsonConverter(typeof(TimeSpanOrDateTimeConverter))]
+        public TimeSpan RegistrationOnTime { get; }
         public int MessageId { get; }
 
     }

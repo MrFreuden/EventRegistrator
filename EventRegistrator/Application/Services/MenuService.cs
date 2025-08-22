@@ -10,12 +10,12 @@ namespace EventRegistrator.Application.Services
     public class MenuService : IMenuService
     {
         private readonly IUserRepository _userRepository;
-        private readonly UserAdmin _userAdmin;
         private readonly IStateFactory _stateFactory;
         private const int _maxObjPerPage = 3;
-        public MenuService(IUserRepository userRepository)
+        public MenuService(IUserRepository userRepository, IStateFactory stateFactory)
         {
             _userRepository = userRepository;
+            _stateFactory = stateFactory;
         }
 
         public MenuDescriptor Get(MenuKey key, MenuContext ctx) => key switch
@@ -69,7 +69,7 @@ namespace EventRegistrator.Application.Services
                 Extras: new[]
                 {
                 new MenuExtra("Редагувати", Constants.EditTemplateText,
-                    c => new SwitchState(() => new EditTemplateTextState())),
+                    c => new SwitchState(() => _stateFactory.CreateState(StateType.EditTemplateText))),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.Hashtags, ctx with { HashtagName = null }))
                 },

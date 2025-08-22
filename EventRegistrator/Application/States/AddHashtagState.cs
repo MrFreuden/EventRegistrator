@@ -10,12 +10,12 @@ namespace EventRegistrator.Application.States
         {
             user.GetTargetChat(user.CurrentContext.TargetChatId.Value).AddHashtag(new Hashtag(message.Text));
             user.RevertState();
+            user.LastMessageId = null;
             return [await user.State.Handle(message, user)];
         }
 
         public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
-            user.IsAsked = true;
             return new Response { ChatId = message.ChatId, Text = Constants.AskForHashtag, MessageToEditId = null };
         }
     }

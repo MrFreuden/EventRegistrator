@@ -8,16 +8,16 @@ namespace EventRegistrator.Application.Commands
 {
     public class SettingsCommand : ICommand
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IMenuStateFactory _menuStateFactory;
 
-        public SettingsCommand(IUserRepository userRepository)
+        public SettingsCommand(IMenuStateFactory menuStateFactory)
         {
-            _userRepository = userRepository;
+            _menuStateFactory = menuStateFactory;
         }
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var state = new StartMenuCommand(_userRepository, MenuKey.TargetChats);
+            var state = new StartMenuCommand(_menuStateFactory, MenuKey.TargetChats);
             return await state.Execute(message, user);
         }
     }

@@ -11,17 +11,19 @@ namespace EventRegistrator.Application.Handlers
     public class PrivateMessageHandler : IHandler
     {
         private readonly IUserRepository _userRepository;
+        private readonly IMenuStateFactory _menuStateFactory;
         private readonly ILogger<PrivateMessageHandler> _logger;
         private readonly Dictionary<string, Func<ICommand>> _commands;
 
-        public PrivateMessageHandler(IUserRepository userRepository, ILogger<PrivateMessageHandler> logger)
+        public PrivateMessageHandler(IUserRepository userRepository, IMenuStateFactory menuStateFactory, ILogger<PrivateMessageHandler> logger)
         {
             _userRepository = userRepository;
+            _menuStateFactory = menuStateFactory;
             _logger = logger;
             _commands = new Dictionary<string, Func<ICommand>>
             {
                 { "/start", () => new StartCommand(_userRepository) },
-                { "/settings", () => new SettingsCommand(_userRepository) },
+                { "/settings", () => new SettingsCommand(_menuStateFactory) },
                 { "/admin", () => new AdminCommand(_userRepository) }
             };
         }
@@ -41,7 +43,7 @@ namespace EventRegistrator.Application.Handlers
                 return [await defaultState.Handle(message, user)];
             }
 
-            if (user.IsAsked || user.State != null || user.State as DefaultState == null)
+            if (user.State != null || user.State as DefaultState == null)
             {
                 var response = await user.State.Execute(message, user);
                 if (response == null || response.Count == 0)

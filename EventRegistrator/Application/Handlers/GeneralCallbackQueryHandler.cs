@@ -9,16 +9,15 @@ namespace EventRegistrator.Application.Handlers
     public class GeneralCallbackQueryHandler : IHandler
     {
         private readonly IUserRepository _userRepository;
-        private readonly CommandStateFactory _commandStateFactory;
+        private readonly ICommandFactory _commandFactory;
+        private readonly IStateFactory _stateFactory;
         private readonly ILogger<GeneralCallbackQueryHandler> _logger;
 
-        public GeneralCallbackQueryHandler(
-            IUserRepository userRepository,
-            CommandStateFactory commandStateFactory,
-            ILogger<GeneralCallbackQueryHandler> logger)
+        public GeneralCallbackQueryHandler(IUserRepository userRepository, ICommandFactory commandFactory, IStateFactory stateFactory, ILogger<GeneralCallbackQueryHandler> logger)
         {
             _userRepository = userRepository;
-            _commandStateFactory = commandStateFactory;
+            _commandFactory = commandFactory;
+            _stateFactory = stateFactory;
             _logger = logger;
         }
 
@@ -38,7 +37,7 @@ namespace EventRegistrator.Application.Handlers
             }
             if (message.Text.StartsWith("Cancel"))
             {
-                var cancelCommand = _commandStateFactory.CreateCommand(Objects.Enums.CommandType.CancelRegistrations);
+                var cancelCommand = _commandFactory.CreateCommand(Objects.Enums.CommandType.CancelRegistrations);
                 return await cancelCommand.Execute(message, user);
             }
             _logger.LogError("Failed to handle callback {MessageDTO}", message.Text);

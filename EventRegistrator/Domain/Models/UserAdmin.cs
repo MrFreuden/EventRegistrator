@@ -19,7 +19,6 @@ namespace EventRegistrator.Domain.Models
         public IState State => _state;
         public long Id { get; set; }
         public long PrivateChatId { get; set; }
-        public bool IsAsked { get; set; }
         public MenuContext CurrentContext { get; set; }
         public int? LastMessageId { get; set; }
 

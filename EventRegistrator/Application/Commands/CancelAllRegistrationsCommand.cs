@@ -24,7 +24,7 @@ namespace EventRegistrator.Application.Commands
             if (resultUndo.Success)
             {
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
-                lastEvent.TemplateText = text;
+                lastEvent.UpdateTemplate(text);
             }
 
             return GetSuccessResponsesForEdit(user, resultUndo);

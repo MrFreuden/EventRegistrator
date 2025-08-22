@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using EventRegistrator.Infrastructure;
+using Newtonsoft.Json;
 
 namespace EventRegistrator.Domain.Models
 {
@@ -8,10 +9,11 @@ namespace EventRegistrator.Domain.Models
         [JsonProperty]
         private readonly List<Registration> _currentRegistrations;
         public int MaxCapacity { get; private set; }
-        public DateTime Time { get; private set; }
+        [JsonConverter(typeof(TimeSpanOrDateTimeConverter))]
+        public TimeSpan Time { get; private set; }
         public int CurrentRegistrationCount => _currentRegistrations.Count;
 
-        public TimeSlot(DateTime time, int maxCapacity)
+        public TimeSlot(TimeSpan time, int maxCapacity)
         {
             if (maxCapacity < 0)
             {
@@ -56,7 +58,7 @@ namespace EventRegistrator.Domain.Models
             }
         }
 
-        public void EditTime(DateTime time)
+        public void EditTime(TimeSpan time)
         {
             if (time == default || Time == time)
             {

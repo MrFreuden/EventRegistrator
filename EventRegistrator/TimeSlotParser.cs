@@ -33,8 +33,7 @@ namespace EventRegistrator
                     if (TimeSpan.TryParse(timeStr, out TimeSpan time) &&
                         int.TryParse(capacityStr, out int capacity))
                     {
-                        DateTime slotTime = eventDate.Date.Add(time);
-                        timeSlots.Add(new TimeSlot(slotTime, capacity));
+                        timeSlots.Add(new TimeSlot(time, capacity));
                     }
                 }
             }
@@ -119,15 +118,15 @@ namespace EventRegistrator
                     if (slotToken == "+" && slotMap != null && slotMap.Count == 1)
                     {
                         var slot = slotMap.First();
-                        var resolvedRegistrationTime = message.Created.Date.Add(slot.Value);
+                        var resolvedRegistrationTime = slot.Value;
                         result.Add(new Registration(message.UserId.Value, name, resolvedRegistrationTime, message.Id));
                         anySlot = true;
                         continue;
                     }
 
-                    if (TryResolveSlotToken(slotToken, message.Created, slotMap, out DateTime registrationTime))
+                    if (TryResolveSlotToken(slotToken, slotMap, out TimeSpan slotTime))
                     {
-                        result.Add(new Registration(message.UserId.Value, name, registrationTime, message.Id));
+                        result.Add(new Registration(message.UserId.Value, name, slotTime, message.Id));
                         anySlot = true;
                     }
                 }
@@ -142,22 +141,22 @@ namespace EventRegistrator
             return SlotOrTimePattern.IsMatch(token.Trim());
         }
 
-        private static bool TryResolveSlotToken(string token, DateTime eventDate, Dictionary<int, TimeSpan> slotMap, out DateTime time)
+        private static bool TryResolveSlotToken(string token, Dictionary<int, TimeSpan> slotMap, out TimeSpan time)
         {
             time = default;
             if (string.IsNullOrWhiteSpace(token)) return false;
 
             var t = token.Trim().TrimEnd('.', ')');
 
-            if (DateTime.TryParseExact(t, new[] { "H:mm", "HH:mm" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+            if (int.TryParse(t, out int slot) && slotMap != null && slotMap.TryGetValue(slot, out TimeSpan slotTime))
             {
-                time = eventDate.Date.Add(dt.TimeOfDay);
+                time = slotTime;
                 return true;
             }
 
-            if (int.TryParse(t, out int slot) && slotMap != null && slotMap.TryGetValue(slot, out TimeSpan slotTime))
+            if (TimeSpan.TryParse(t.Replace('.', ':'), out TimeSpan ts))
             {
-                time = eventDate.Date.Add(slotTime);
+                time = ts;
                 return true;
             }
 
@@ -166,20 +165,9 @@ namespace EventRegistrator
 
         public static TimeSlot FindMatchingTimeSlot(IReadOnlyCollection<TimeSlot> timeSlots, Registration registration)
         {
-            if (registration.RegistrationTime.Date == DateTime.MinValue.Date)
-            {
-                int slotIndex = (int)registration.RegistrationTime.Hour - 1;
-                if (slotIndex >= 0 && slotIndex < timeSlots.Count)
-                {
-                    var timeSlotList = timeSlots.ToList();
-                    return timeSlotList[slotIndex];
-                }
-                return null;
-            }
-
             return timeSlots.FirstOrDefault(slot =>
-                slot.Time.Hour == registration.RegistrationTime.Hour &&
-                slot.Time.Minute == registration.RegistrationTime.Minute);
+                slot.Time.Hours == registration.RegistrationOnTime.Hours &&
+                slot.Time.Minutes == registration.RegistrationOnTime.Minutes);
         }
 
         public static string UpdateTemplateText(string templateText, IReadOnlyCollection<TimeSlot> timeSlots)
@@ -187,6 +175,7 @@ namespace EventRegistrator
             if (string.IsNullOrWhiteSpace(templateText))
                 return templateText;
 
+            var regex = new Regex(@"(?:.*?)(\d{1,2}[:\.]\d{2})\s*[-–]\s*(\d+)\s+вільних місць", RegexOptions.Compiled);
             var lines = templateText.Split(
                 new[] { "\r\n", "\n", "\r" },
                 StringSplitOptions.None
@@ -197,7 +186,7 @@ namespace EventRegistrator
             foreach (var line in lines)
             {
                 string updatedLine = line;
-                var match = TemplateRegex.Match(line);
+                var match = regex.Match(line);
 
                 if (match.Success)
                 {
@@ -206,14 +195,14 @@ namespace EventRegistrator
                     if (TimeSpan.TryParse(timeStr, out TimeSpan time))
                     {
                         var matchingSlot = timeSlots.FirstOrDefault(slot =>
-                            slot.Time.Hour == time.Hours &&
-                            slot.Time.Minute == time.Minutes);
+                            slot.Time.Hours == time.Hours &&
+                            slot.Time.Minutes == time.Minutes);
 
                         if (matchingSlot != null)
                         {
                             int availableSpots = matchingSlot.MaxCapacity - matchingSlot.CurrentRegistrationCount;
-                            updatedLine = TemplateRegex.Replace(line, m =>
-                                $"{timeStr} - {availableSpots} вільних місць");
+                            var prefix = line.Substring(0, match.Groups[1].Index);
+                            updatedLine = $"{prefix}{timeStr} - {availableSpots} вільних місць";
                         }
                     }
                 }
@@ -222,6 +211,30 @@ namespace EventRegistrator
             }
 
             return string.Join(Environment.NewLine, result);
+        }
+
+        public static List<(TimeSpan time, int capacity)> ParseTemplate(string templateText)
+        {
+            var result = new List<(TimeSpan, int)>();
+            var regex = new Regex(@"(?:.*?)(\d{1,2}[:\.]\d{2})\s*[-–]\s*(\d+)\s+вільних місць", RegexOptions.Compiled);
+            var lines = templateText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
+            {
+                var match = regex.Match(line);
+                if (match.Success)
+                {
+                    var timeStr = match.Groups[1].Value.Replace('.', ':');
+                    var capacityStr = match.Groups[2].Value;
+
+                    if (TimeSpan.TryParse(timeStr, out var time) && int.TryParse(capacityStr, out var capacity))
+                    {
+                        result.Add((time, capacity));
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }
