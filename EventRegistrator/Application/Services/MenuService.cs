@@ -27,7 +27,7 @@ namespace EventRegistrator.Application.Services
                 Extras: new[]
                 {
                 new MenuExtra("➕ Додати чат", "chat_add",
-                    _ => new SwitchState(() => new AddChatState())),
+                    _ => new SwitchState(() => _stateFactory.CreateState(StateType.AddChat))),
                 },
                 OnItem: (ip) =>
                 {
@@ -47,7 +47,7 @@ namespace EventRegistrator.Application.Services
                 Extras: new[]
                 {
                 new MenuExtra("➕ Додати хэштег", "tag_add",
-                    c => new SwitchState(() => new AddHashtagState())),
+                    c => new SwitchState(() => _stateFactory.CreateState(StateType.AddHashtag))),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.TargetChats, ctx with { TargetChatId = null }))
                 },

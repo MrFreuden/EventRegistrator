@@ -3,21 +3,28 @@ using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
 using EventRegistrator.Application.States;
+using EventRegistrator.Domain.Interfaces;
 using CommandType = EventRegistrator.Application.Enums.CommandType;
 
 namespace EventRegistrator.Application.Factories
 {
-    public class CommandStateFactory : ICommandFactory, IStateFactory
+    public class CommandFactory : ICommandFactory
     {
+        private readonly IUserRepository _userRepository;
+        private readonly IMenuStateFactory _menuStateFactory;
         private readonly EventService _eventService;
         private readonly RegistrationService _registrationService;
         private readonly ResponseManager _responseManager;
 
-        public CommandStateFactory(
-            EventService eventService,
-            RegistrationService registrationService,
+        public CommandFactory(
+            IUserRepository userRepository, 
+            IMenuStateFactory menuStateFactory, 
+            EventService eventService, 
+            RegistrationService registrationService, 
             ResponseManager responseManager)
         {
+            _userRepository = userRepository;
+            _menuStateFactory = menuStateFactory;
             _eventService = eventService;
             _registrationService = registrationService;
             _responseManager = responseManager;
@@ -35,13 +42,59 @@ namespace EventRegistrator.Application.Factories
             };
         }
 
+        public ICommand CreateSlashCommand(string? text)
+        {
+            var commands = new Dictionary<string, Func<ICommand>>
+            {
+                { "/start", () => new StartCommand(_userRepository) },
+                { "/settings", () => new SettingsCommand(_menuStateFactory) },
+                { "/admin", () => new AdminCommand(_userRepository) }
+            };
+
+            if (commands.TryGetValue(text, out var command))
+            {
+                return command.Invoke();
+            }
+
+            throw new NotImplementedException("UnknownSlashCommand");
+        }
+    }
+
+    public class StateFactory : IStateFactory
+    {
+        private readonly IStateManager _stateManager;
+        private readonly Lazy<ICommandFactory> _commandFactory;
+
+        public StateFactory(IStateManager stateManager, Lazy<ICommandFactory> commandFactory)
+        {
+            _stateManager = stateManager;
+            _commandFactory = commandFactory;
+        }
+
         public IState CreateState(StateType stateType)
         {
             return stateType switch
             {
-                StateType.EditTemplateText => new EditTemplateTextState(),
+                StateType.EditTemplateText => CreateEditTemplateTextState(),
+                StateType.AddHashtag => CreateAddHashtagState(),
+                StateType.AddChat => CreateAddChatState(),
                 _ => throw new ArgumentException($"Неизвестный тип состояния: {stateType}")
             };
+        }
+
+        public IState CreateEditTemplateTextState()
+        {
+            return new EditTemplateTextState(_stateManager, this, _commandFactory.Value);
+        }
+
+        public IState CreateAddHashtagState()
+        {
+            return new AddHashtagState(_stateManager, this);
+        }
+
+        public IState CreateAddChatState()
+        {
+            return new AddChatState();
         }
     }
 }

@@ -148,10 +148,15 @@ namespace EventRegistrator
             services.AddSingleton<EventService>();
             services.AddSingleton<RegistrationService>();
             services.AddSingleton<ResponseManager>();
-            services.AddSingleton<ICommandFactory, CommandStateFactory>();
-            services.AddSingleton<IStateFactory, CommandStateFactory>();
+            services.AddSingleton<ICommandFactory, CommandFactory>();
+            services.AddSingleton<IStateFactory>(provider =>
+    new StateFactory(
+        provider.GetRequiredService<IStateManager>(),
+        new Lazy<ICommandFactory>(() => provider.GetRequiredService<ICommandFactory>())
+    )
+);
+            services.AddSingleton<IStateManager, StateManager>();
             services.AddSingleton<IMenuStateFactory, MenuStateFactory>();
-            services.AddSingleton<CommandStateFactory>();
             services.AddSingleton<PrivateMessageHandler>();
             services.AddSingleton<TargetChatMessageHandler>();
             services.AddSingleton<GeneralCallbackQueryHandler>();

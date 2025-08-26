@@ -2,7 +2,12 @@
 {
     public enum StateType
     {
+        Default,
         EditTemplateText,
-        Pagination,
+        AddChat,
+        AddHashtag,
+        Menu,
+        Revert,
+        Custom,
     }
 }

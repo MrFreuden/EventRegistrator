@@ -1,24 +1,43 @@
 ﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.States
 {
-    public class AddHashtagState : IState
+    public class AddHashtagState : BaseState
     {
-        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
+        public AddHashtagState(IStateManager stateManager, IStateFactory stateFactory) : base(stateManager, stateFactory)
         {
-            user.GetTargetChat(user.CurrentContext.TargetChatId.Value).AddHashtag(new Hashtag(message.Text));
-            user.RevertState();
-            user.LastMessageId = null;
-            return [await user.State.Handle(message, user)];
         }
 
-        public async Task<Response> Handle(MessageDTO message, UserAdmin user)
+        public override async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
             return new Response { ChatId = message.ChatId, Text = Constants.AskForHashtag, MessageToEditId = null };
         }
+
+        protected override StateType GetNextStateType(StateResult result)
+        {
+            return StateType.Revert;
+        }
+
+        protected override bool ShouldChangeState(StateResult result)
+        {
+            return result.ShouldTransition;
+        }
+
+        protected override async Task<StateResult> ProcessInput(MessageDTO message, UserAdmin user)
+        {
+            user.GetTargetChat(user.CurrentContext.TargetChatId.Value).AddHashtag(new Hashtag(message.Text));
+
+            return new StateResult
+            {
+                Responses = [new Response { ChatId = message.ChatId, Text = "Хэштег добавлен" }],
+                ShouldTransition = true
+            };
+        }    
     }
 }

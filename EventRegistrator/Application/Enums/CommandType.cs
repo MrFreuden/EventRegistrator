@@ -6,6 +6,8 @@
         Register,
         CancelRegistration,
         CancelRegistrations,
-        StartPagination,
+        EditHashtagTemplate,
+        EditEventTemplate,
+
     }
 }

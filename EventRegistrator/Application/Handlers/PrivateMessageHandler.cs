@@ -1,6 +1,7 @@
 ﻿using EventRegistrator.Application.Commands;
 using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Application.Services;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Interfaces;
@@ -11,21 +12,14 @@ namespace EventRegistrator.Application.Handlers
     public class PrivateMessageHandler : IHandler
     {
         private readonly IUserRepository _userRepository;
-        private readonly IMenuStateFactory _menuStateFactory;
         private readonly ILogger<PrivateMessageHandler> _logger;
-        private readonly Dictionary<string, Func<ICommand>> _commands;
+        private readonly ICommandFactory _commandFactory;
 
-        public PrivateMessageHandler(IUserRepository userRepository, IMenuStateFactory menuStateFactory, ILogger<PrivateMessageHandler> logger)
+        public PrivateMessageHandler(IUserRepository userRepository, ICommandFactory commandFactory, ILogger<PrivateMessageHandler> logger)
         {
             _userRepository = userRepository;
-            _menuStateFactory = menuStateFactory;
+            _commandFactory = commandFactory;
             _logger = logger;
-            _commands = new Dictionary<string, Func<ICommand>>
-            {
-                { "/start", () => new StartCommand(_userRepository) },
-                { "/settings", () => new SettingsCommand(_menuStateFactory) },
-                { "/admin", () => new AdminCommand(_userRepository) }
-            };
         }
 
         public async Task<List<Response>> HandleAsync(MessageDTO message)
@@ -37,22 +31,23 @@ namespace EventRegistrator.Application.Handlers
                 return new List<Response>();
             }
             
-            if (IsCommand(message))
+            if (IsSlashCommand(message))
             {
-                var defaultState = new DefaultState(_commands);
-                return [await defaultState.Handle(message, user)];
+                var command = _commandFactory.CreateSlashCommand(message.Text);
+                return await command.Execute(message, user);
             }
 
-            if (user.State != null || user.State as DefaultState == null)
+            if (user.State != null && user.State as DefaultState == null)
             {
                 var response = await user.State.Execute(message, user);
-                if (response == null || response.Count == 0)
+                if (response != null && response.Count > 0)
                 {
-                    _logger.LogError("Failed to execute state. State: {State}", user.State);
-                    return new List<Response>();
+                    await _userRepository.Save(user);
+                    return response;
                 }
-                await _userRepository.Save(user);
-                return response;
+
+                _logger.LogError("Failed to execute state. State: {State}", user.State);
+                return new List<Response>();
             }
 
             _logger.LogError("Failed to handle private message. Message: {@Message}", message);
@@ -64,7 +59,7 @@ namespace EventRegistrator.Application.Handlers
             return IsPrivateMessage(message);
         }
 
-        private bool IsCommand(MessageDTO message)
+        private bool IsSlashCommand(MessageDTO message)
         {
             return message.Text.StartsWith('/');
         }

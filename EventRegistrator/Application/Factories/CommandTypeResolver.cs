@@ -26,8 +26,6 @@ namespace EventRegistrator.Application.Factories
                 return CommandType.Register;
             if (message.Text.Equals(Constants.Cancel))
                 return CommandType.CancelRegistrations;
-            if (message.Text.Equals(Constants.Pagination))
-                return CommandType.StartPagination;
             return null;
         }
 

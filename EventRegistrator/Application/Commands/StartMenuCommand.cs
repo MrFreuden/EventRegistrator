@@ -33,11 +33,13 @@ namespace EventRegistrator.Application.Commands
     {
         private readonly IStateFactory _stateFactory;
         private readonly IUserRepository _userRepository;
+        private readonly IStateManager _stateManager;
 
-        public MenuStateFactory(IUserRepository userRepository, IStateFactory stateFactory)
+        public MenuStateFactory(IUserRepository userRepository, IStateFactory stateFactory, IStateManager stateManager)
         {
             _userRepository = userRepository;
             _stateFactory = stateFactory;
+            _stateManager = stateManager;
         }
 
         public MenuState Create(MenuKey key, MenuContext ctx, int startPage = 0)
@@ -46,6 +48,8 @@ namespace EventRegistrator.Application.Commands
                 menuService: new MenuService(_userRepository, _stateFactory),
                 key: key,
                 ctx: ctx,
+                stateManager: _stateManager,
+                stateFactory: _stateFactory,
                 startPage: startPage
             );
         }
