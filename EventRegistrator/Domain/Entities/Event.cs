@@ -1,17 +1,18 @@
-﻿using EventRegistrator.Infrastructure.Utils;
+﻿using EventRegistrator.Domain.Interfaces;
+using EventRegistrator.Infrastructure.Utils;
 using Newtonsoft.Json;
 
 namespace EventRegistrator.Domain.Models
 {
     [Serializable]
-    public class Event
+    public class Event : IPagiable
     {
         [JsonProperty]
         private readonly List<TimeSlot> _slots;
 
         public Event(string title, int postId, long targetChatId, string hashtagName)
         {
-            Id = new Guid();
+            Id = Guid.NewGuid();
             Title = title;
             PostId = postId;
             TargetChatId = targetChatId;
@@ -30,6 +31,10 @@ namespace EventRegistrator.Domain.Models
         private string _templateText;
         public string TemplateText => _templateText;
         public IReadOnlyCollection<TimeSlot> Slots => _slots.AsReadOnly();
+
+        public string Name => Title;
+
+        public string Callback => Id.ToString();
 
         public void AddSlot(TimeSlot slot)
         {

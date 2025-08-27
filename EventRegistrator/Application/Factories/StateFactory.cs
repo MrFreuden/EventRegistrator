@@ -8,13 +8,20 @@ using Microsoft.Win32;
 
 namespace EventRegistrator.Application.Factories
 {
-    public class CommandStateFactory : IStateFactory
+    public class StateFactory : IStateFactory
     {
+        private readonly ResponseManager _responseManager;
+
+        public StateFactory(ResponseManager responseManager)
+        {
+            _responseManager = responseManager;
+        }
+
         public IState CreateState(StateType stateType)
         {
             return stateType switch
             {
-                StateType.EditTemplateText => new EditTemplateTextState(),
+                StateType.EditTemplateText => new EditTemplateTextState(_responseManager),
                 _ => throw new ArgumentException($"Неизвестный тип состояния: {stateType}")
             };
         }

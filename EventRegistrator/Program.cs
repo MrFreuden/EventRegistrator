@@ -153,9 +153,9 @@ namespace EventRegistrator
             services.AddSingleton<CommandRegistry>();
             services.AddSingleton<ICommandFactory, CommandFactory>();
 
-            services.AddSingleton<IStateFactory, CommandStateFactory>();
+            services.AddSingleton<IStateFactory, StateFactory>();
             services.AddSingleton<IMenuStateFactory, MenuStateFactory>();
-            services.AddSingleton<CommandStateFactory>();
+            services.AddSingleton<StateFactory>();
 
             services.AddSingleton<PrivateMessageHandler>();
             services.AddSingleton<TargetChatMessageHandler>();

@@ -26,7 +26,7 @@ namespace EventRegistrator.Application.Services
         public static Event Create(MessageDTO message)
         {
             var hashtagName = ParseHashtagName(message.Text);
-            return new Event(_defaultTitle, message.Id, message.ChatId, hashtagName);
+            return new Event(message.Created.ToString(), message.Id, message.ChatId, hashtagName);
         }
 
         public void EditTimeSlots(Event @event, string templateText)

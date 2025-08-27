@@ -43,6 +43,17 @@ namespace EventRegistrator.Domain.Models
             return _events.Last();
         }
 
+        public Event? GetEvent(Guid guid)
+        {
+            return _events.FirstOrDefault(e => e.Id == guid);
+        }
+
+        public IReadOnlyCollection<Event> GetEvents(long targetChatId)
+        {
+            var events = _events.Where(e => e.TargetChatId == targetChatId).ToList();
+            return events;
+        }
+
         public void AddTargetChat(TargetChat chat)
         {
             //ArgumentNullException.ThrowIfNull(chat);

@@ -48,6 +48,8 @@ namespace EventRegistrator.Application.Services
                 {
                 new MenuExtra("➕ Додати хэштег", "tag_add",
                     c => new SwitchState(() => new AddHashtagState())),
+                new MenuExtra("Iвенти", "events",
+                    _ => new NavigateMenu(MenuKey.Events, ctx)),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.TargetChats, ctx with { TargetChatId = null }))
                 },
@@ -72,6 +74,42 @@ namespace EventRegistrator.Application.Services
                     c => new SwitchState(() => _stateFactory.CreateState(StateType.EditTemplateText))),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.Hashtags, ctx with { HashtagName = null }))
+                },
+                OnItem: null
+            ),
+
+            MenuKey.Events => new MenuDescriptor(
+                Title: ctx =>
+        $"Недавнi iвенти чату {_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).ChannelName}",
+                GetItems: () => _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvents(ctx.TargetChatId.Value),
+                PageSize: _maxObjPerPage,
+                Extras: new[]
+                {
+                new MenuExtra("Редагувати шаблон", Constants.EditTemplateText,
+                    c => new SwitchState(() =>  _stateFactory.CreateState(StateType.EditTemplateText))),
+                new MenuExtra("🔙 Назад", "back",
+                    _ => new NavigateMenu(MenuKey.Hashtags, ctx))
+                },
+                OnItem: (ip) =>
+                {
+                    var @event = (Event)ip;
+                    return new NavigateMenu(
+                        NextKey: MenuKey.EventDetailts,
+                        Ctx: ctx with { EventId = @event.Id }
+                    );
+                }
+            ),
+
+            MenuKey.EventDetailts => new MenuDescriptor(
+                Title: ctx => TextFormatter.FormatRegistrationsInfo(_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value)),
+                GetItems: null,
+                PageSize: _maxObjPerPage,
+                Extras: new[]
+                {
+                new MenuExtra("Редагувати шаблон", Constants.EditTemplateText,
+                    c => new SwitchState(() => _stateFactory.CreateState(StateType.EditTemplateText))),
+                new MenuExtra("🔙 Назад", "back",
+                    _ => new NavigateMenu(MenuKey.Events, ctx with { EventId = null }))
                 },
                 OnItem: null
             ),

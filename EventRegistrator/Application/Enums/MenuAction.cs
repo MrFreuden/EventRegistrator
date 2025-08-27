@@ -7,7 +7,8 @@ namespace EventRegistrator.Application.Enums
     public record MenuContext(
         long ChatId,
         long? TargetChatId = null,
-        string? HashtagName = null);
+        string? HashtagName = null,
+        Guid? EventId = null);
 
     public record NavigateMenu(MenuKey NextKey, MenuContext Ctx, int StartPage = 0) : MenuAction;
     public record SwitchState(Func<IState> Factory) : MenuAction;

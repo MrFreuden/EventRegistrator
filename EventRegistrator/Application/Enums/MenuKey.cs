@@ -5,6 +5,8 @@
         TargetChats,
         Hashtags,
         HashtagDetails,
+        Events,
+        EventDetailts,
     }
 
 }
