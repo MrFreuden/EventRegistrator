@@ -1,6 +1,7 @@
 ﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
+using Telegram.Bot.Types;
 
 namespace EventRegistrator.Application.Services
 {
@@ -10,27 +11,35 @@ namespace EventRegistrator.Application.Services
         {
             var eventDataPrivateMessage = CreatePrivateEventSummaryMessage(user.PrivateChatId, lastEvent);
 
-            var firstCommentUpdateMessage = new Response
-            {
-                ChatId = lastEvent.TargetChatId,
-                Text = lastEvent.TemplateText,
-                MessageToEditId = lastEvent.CommentMessageId,
-                ButtonData = new(Constants.Cancel, Constants.Cancel),
-            };
+            var commentUpdateMessage = PrepareCommentUpdateMessage(lastEvent);
 
-            return [eventDataPrivateMessage, firstCommentUpdateMessage];
+            return [eventDataPrivateMessage, commentUpdateMessage];
         }
 
         public Response PrepareCommentUpdateMessage(Event lastEvent)
         {
-            var firstCommentUpdateMessage = new Response
+            if (lastEvent.CommentMessageId == default)
             {
-                ChatId = lastEvent.TargetChatId,
-                Text = lastEvent.TemplateText,
-                MessageToEditId = lastEvent.CommentMessageId,
-                ButtonData = new(Constants.Cancel, Constants.Cancel),
-            };
-            return firstCommentUpdateMessage;
+                var firstCommentUpdateMessage = new Response
+                {
+                    ChatId = lastEvent.TargetChatId,
+                    Text = lastEvent.TemplateText,
+                    SaveMessageIdCallback = id => { lastEvent.CommentMessageId = id; },
+                    ButtonData = new(Constants.Cancel, Constants.Cancel),
+                };
+                return firstCommentUpdateMessage;
+            }
+            else
+            {
+                var commentUpdateMessage = new Response
+                {
+                    ChatId = lastEvent.TargetChatId,
+                    Text = lastEvent.TemplateText,
+                    MessageToEditId = lastEvent.CommentMessageId,
+                    ButtonData = new(Constants.Cancel, Constants.Cancel),
+                };
+                return commentUpdateMessage;
+            }
         }
 
         public Response CreatePrivateEventSummaryMessage(long chatId, Event lastEvent)

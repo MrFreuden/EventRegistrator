@@ -19,7 +19,6 @@ namespace EventRegistrator.Application.Commands
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            // Находит все классы с атрибутом [Command]
             var commandTypes = assembly.GetTypes()
                 .Where(t => t.GetCustomAttribute<CommandAttribute>() != null);
 
@@ -29,7 +28,6 @@ namespace EventRegistrator.Application.Commands
                 _slashCommands[attr.Name] = type;
             }
 
-            // Находит все классы с атрибутом [CallbackCommand]
             var callbackTypes = assembly.GetTypes()
                 .Where(t => t.GetCustomAttribute<CallbackCommandAttribute>() != null);
 

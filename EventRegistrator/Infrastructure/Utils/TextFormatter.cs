@@ -14,14 +14,14 @@ namespace EventRegistrator.Infrastructure.Utils
                 return "Нет доступных временных слотов";
 
             var sb = new StringBuilder();
-            sb.AppendLine($"Запись на: {lastEvent.Title}");
+            sb.AppendLine($"Запис на: {lastEvent.Title}");
             sb.AppendLine();
 
             slots = slots.OrderBy(s => s.Time).ToList();
 
             foreach (var slot in slots)
             {
-                sb.AppendLine($"{slot.Time.ToString(@"hh\:mm")}");
+                sb.AppendLine($"{slot.Time.ToString(@"hh\:mm")}     {slot.CurrentRegistrationCount} / {slot.MaxCapacity}");
 
                 var registrations = GetRegistrationsFromTimeSlot(slot);
 

@@ -12,10 +12,12 @@ namespace EventRegistrator.Application.Commands
     public class CreateEventCommand : ICommand
     {
         private readonly EventService _eventService;
+        private readonly ResponseManager _responseManager;
 
-        public CreateEventCommand(EventService eventService)
+        public CreateEventCommand(EventService eventService, ResponseManager responseManager)
         {
             _eventService = eventService;
+            _responseManager = responseManager;
         }
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
@@ -26,14 +28,7 @@ namespace EventRegistrator.Application.Commands
             var result = _eventService.AddNewEvent(@event, message.Created);
             if (result.Success)
             {
-                return [new Response
-                    {
-                        ChatId = result.Event.TargetChatId,
-                        Text = result.Event.TemplateText,
-                        ButtonData = new(Constants.Cancel, Constants.Cancel),
-                        SaveMessageIdCallback = id => { result.Event.CommentMessageId = id; },
-                        MessageToReplyId = message.Id
-                    }];
+                return _responseManager.PrepareNotificationMessages(user, @event);
             }
             return [new Response()];
         }
