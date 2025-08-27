@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Interfaces;
@@ -8,6 +9,7 @@ using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.Commands
 {
+    [Command("/admin", "Администрирование")]
     public class AdminCommand : ICommand
     {
         private readonly IUserRepository _userRepository;

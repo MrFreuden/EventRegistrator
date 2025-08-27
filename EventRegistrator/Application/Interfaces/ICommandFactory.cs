@@ -4,6 +4,6 @@ namespace EventRegistrator.Application.Interfaces
 {
     public interface ICommandFactory
     {
-        ICommand CreateCommand(CommandType commandType);
+        ICommand CreateCommand(string name);
     }
 }

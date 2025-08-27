@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
@@ -10,6 +11,7 @@ using EventRegistrator.Infrastructure;
 
 namespace EventRegistrator.Application.Commands
 {
+    [Command("StartMenu", "Запуск меню")]
     public sealed class StartMenuCommand : ICommand
     {
         private readonly MenuKey _key;

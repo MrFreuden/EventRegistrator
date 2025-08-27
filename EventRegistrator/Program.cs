@@ -142,16 +142,21 @@ namespace EventRegistrator
             //loader.SaveDataAsync(userRepository);
             //userRepository.Clear();
             services.AddSingleton(loader);
+
             services.AddSingleton<IUserRepository>(userRepository);
             services.AddSingleton(userRepository);
             services.AddSingleton<MessageSender>();
             services.AddSingleton<EventService>();
             services.AddSingleton<RegistrationService>();
             services.AddSingleton<ResponseManager>();
-            services.AddSingleton<ICommandFactory, CommandStateFactory>();
+
+            services.AddSingleton<CommandRegistry>();
+            services.AddSingleton<ICommandFactory, CommandFactory>();
+
             services.AddSingleton<IStateFactory, CommandStateFactory>();
             services.AddSingleton<IMenuStateFactory, MenuStateFactory>();
             services.AddSingleton<CommandStateFactory>();
+
             services.AddSingleton<PrivateMessageHandler>();
             services.AddSingleton<TargetChatMessageHandler>();
             services.AddSingleton<GeneralCallbackQueryHandler>();

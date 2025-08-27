@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
@@ -7,6 +8,7 @@ using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.Commands
 {
+    [CallbackCommand("CreateEvent", "Создать событие")]
     public class CreateEventCommand : ICommand
     {
         private readonly EventService _eventService;

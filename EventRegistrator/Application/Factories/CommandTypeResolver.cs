@@ -8,7 +8,7 @@ namespace EventRegistrator.Application.Factories
     public static class CommandTypeResolver
     {
         private const char _hashtag = '#';
-        public static CommandType? DetermineCommandType(MessageDTO message, UserAdmin user)
+        public static string? DetermineCommandName(MessageDTO message, UserAdmin user)
         {
             if (message == null)
             {
@@ -19,23 +19,13 @@ namespace EventRegistrator.Application.Factories
                 throw new ArgumentNullException(nameof(user));
             }
             if (message.IsEdit && IsReplyToPostMessage(message, user))
-                return CommandType.CancelRegistration;
+                return "DeleteRegistrations";
             if (IsFromChannel(message, user) && IsHasHashtag(message, user))
-                return CommandType.CreateEvent;
+                return "CreateEvent";
             if (IsReplyToPostMessage(message, user))
-                return CommandType.Register;
+                return "Register";
             if (message.Text.Equals(Constants.Cancel))
-                return CommandType.CancelRegistrations;
-            if (message.Text.Equals(Constants.Pagination))
-                return CommandType.StartPagination;
-            return null;
-        }
-
-        public static StateType? DetermineStateType(MessageDTO message, UserAdmin user)
-        {
-            if (message.Text.Equals(Constants.EditTemplateText))
-                return StateType.EditTemplateText;
-            
+                return "Cancel";
             return null;
         }
 

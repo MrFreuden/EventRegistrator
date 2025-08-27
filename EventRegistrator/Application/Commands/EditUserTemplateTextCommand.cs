@@ -1,10 +1,12 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Commands
 {
+    [Command("EditTemplate", "Редактирование шаблона")]
     public class EditUserTemplateTextCommand : ICommand
     {
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)

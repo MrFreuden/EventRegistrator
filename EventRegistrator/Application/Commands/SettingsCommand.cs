@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Domain;
@@ -7,6 +8,7 @@ using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Commands
 {
+    [Command("/settings", "Настройки")]
     public class SettingsCommand : ICommand
     {
         private readonly IMenuStateFactory _menuStateFactory;
