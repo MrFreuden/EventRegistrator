@@ -33,7 +33,7 @@ namespace EventRegistrator.Domain.Models
         {
             if (_events.Count > 6)
             {
-                _events.RemoveRange(0, 5);
+                _events.RemoveRange(0, 4);
             }
             _events.Add(@event);
         }

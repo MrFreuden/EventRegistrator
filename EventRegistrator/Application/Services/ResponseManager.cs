@@ -1,7 +1,6 @@
 ﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
-using Telegram.Bot.Types;
 
 namespace EventRegistrator.Application.Services
 {
@@ -25,7 +24,7 @@ namespace EventRegistrator.Application.Services
                     ChatId = lastEvent.TargetChatId,
                     Text = lastEvent.TemplateText,
                     SaveMessageIdCallback = id => { lastEvent.CommentMessageId = id; },
-                    ButtonData = new(Constants.Cancel, Constants.Cancel),
+                    ButtonData = new("Скасувати записи", Constants.Cancel),
                 };
                 return firstCommentUpdateMessage;
             }
@@ -36,7 +35,7 @@ namespace EventRegistrator.Application.Services
                     ChatId = lastEvent.TargetChatId,
                     Text = lastEvent.TemplateText,
                     MessageToEditId = lastEvent.CommentMessageId,
-                    ButtonData = new(Constants.Cancel, Constants.Cancel),
+                    ButtonData = new("Скасувати записи", Constants.Cancel),
                 };
                 return commentUpdateMessage;
             }
