@@ -22,21 +22,26 @@ namespace EventRegistrator.Application.Commands
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var lastEvent = user.GetLastEvent();
-            if (lastEvent.PostId != message.ReplyToMessageId)
+            var @event = user.GetEvent(message.ReplyToMessageId ?? 0);
+            if (@event == null)
+            {
+                Console.WriteLine("Не удалось найти ивент");
+                return [];
+            }
+            if (@event.PostId != message.ReplyToMessageId)
             {
                 Console.WriteLine("Попытка зарегистрировать на другой пост");
                 return [];
             }
-            //user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId, lastEvent.HashtagName);
-            var map = TimeSlotParser.GetMaper(lastEvent.TemplateText);
+
+            var map = TimeSlotParser.GetMaper(@event.TemplateText);
             var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
 
-            var result = _registrationService.ProcessRegistration(lastEvent, regs);
+            var result = _registrationService.ProcessRegistration(@event, regs);
             if (result.Success)
             {
-                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
-                lastEvent.UpdateTemplate(text);
+                var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
+                @event.UpdateTemplate(text);
                 result.MessageIds = [message.Id];
                 return GetSuccessResponses(user, result);
             }
