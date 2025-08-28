@@ -48,6 +48,12 @@ namespace EventRegistrator.Domain.Models
             return _events.FirstOrDefault(e => e.Id == guid);
         }
 
+        public Event? GetEvent(int postId)
+        {
+            var s = _events.FirstOrDefault(e => e.PostId == postId);
+            return s;
+        }
+
         public IReadOnlyCollection<Event> GetEvents(long targetChatId)
         {
             var events = _events.Where(e => e.TargetChatId == targetChatId).ToList();

@@ -5,6 +5,7 @@ using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Commands
 {
@@ -22,13 +23,17 @@ namespace EventRegistrator.Application.Commands
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var lastEvent = user.GetLastEvent();
-
-            var resultUndo = _registrationService.CancelAllRegistrations(lastEvent, message.UserId.Value);
+            var @event = user.GetEvent(message.ReplyToMessageId ?? 0);
+            if (@event == null)
+            {
+                Console.WriteLine("Не удалось найти ивент");
+                return [];
+            }
+            var resultUndo = _registrationService.CancelAllRegistrations(@event, message.UserId.Value);
             if (resultUndo.Success)
             {
-                var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
-                lastEvent.UpdateTemplate(text);
+                var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
+                @event.UpdateTemplate(text);
             }
 
             return GetSuccessResponsesForEdit(user, resultUndo);
