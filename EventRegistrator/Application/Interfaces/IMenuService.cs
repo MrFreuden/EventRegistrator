@@ -1,5 +1,4 @@
-﻿using EventRegistrator.Application.Objects;
-using EventRegistrator.Application.Objects.Enums;
+﻿using EventRegistrator.Application.Enums;
 
 namespace EventRegistrator.Application.Interfaces
 {

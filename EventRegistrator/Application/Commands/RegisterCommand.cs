@@ -1,10 +1,14 @@
-﻿using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
+using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
+using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.Commands
 {
+    [CallbackCommand("Register", "Регистрация на событие")]
     public class RegisterCommand : ICommand
     {
         private readonly ResponseManager _responseManager;
@@ -24,6 +28,7 @@ namespace EventRegistrator.Application.Commands
                 Console.WriteLine("Попытка зарегистрировать на другой пост");
                 return [];
             }
+            //user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId, lastEvent.HashtagName);
             var map = TimeSlotParser.GetMaper(lastEvent.TemplateText);
             var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
 
@@ -31,7 +36,7 @@ namespace EventRegistrator.Application.Commands
             if (result.Success)
             {
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
-                lastEvent.TemplateText = text;
+                lastEvent.UpdateTemplate(text);
                 result.MessageIds = [message.Id];
                 return GetSuccessResponses(user, result);
             }

@@ -1,26 +1,53 @@
 ﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
+using EventRegistrator.Application.Services;
+using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
+using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.States
 {
     public class EditTemplateTextState : IState
     {
-        private readonly EditTemplateTextCommand _editTemplateTextCommand;
-        public EditTemplateTextState()
+        private readonly ResponseManager _responseManager;
+        public EditTemplateTextState(ResponseManager responseManager)
         {
-            _editTemplateTextCommand = new EditTemplateTextCommand();
+            _responseManager = responseManager;
         }
+
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            user.IsAsked = false;
-            return await _editTemplateTextCommand.Execute(message, user);
+            if (user.CurrentContext.EventId.HasValue)
+            {
+                var @event = user.GetEvent(user.CurrentContext.EventId.Value);
+                if (@event != null)
+                {
+                    @event.EditTemplate(message.Text);
+                    user.RevertState();
+                    user.LastMessageId = null;
+
+                    var uiUpdateResponse = _responseManager.PrepareCommentUpdateMessage(@event);
+                    var response = await user.State.Handle(message, user);
+                    return [uiUpdateResponse, response];
+                }
+            }
+            else
+            {
+                var hashtag = user.GetTargetChat(user.CurrentContext.TargetChatId.Value).GetHashtagByName(user.CurrentContext.HashtagName);
+                if (hashtag != null)
+                {
+                    hashtag.EditTemplateText(message.Text);
+                    user.RevertState();
+                    user.LastMessageId = null;
+                    return [await user.State.Handle(message, user)];
+                }
+            }
+            return new List<Response>();
         }
 
         public async Task<Response> Handle(MessageDTO message, UserAdmin user)
         {
-            user.IsAsked = true;
             return new Response { ChatId = message.ChatId, Text = Constants.AskForNewTemplate, MessageToEditId = null };
         }
     }

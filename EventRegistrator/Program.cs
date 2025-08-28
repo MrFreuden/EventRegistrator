@@ -1,9 +1,12 @@
-﻿using EventRegistrator.Application;
+﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.Factories;
 using EventRegistrator.Application.Handlers;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
-using EventRegistrator.Domain;
-using EventRegistrator.Infrastructure;
+using EventRegistrator.Domain.Interfaces;
+using EventRegistrator.Infrastructure.Config;
+using EventRegistrator.Infrastructure.Persistence;
+using EventRegistrator.Infrastructure.Telegram;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -139,16 +142,21 @@ namespace EventRegistrator
             //loader.SaveDataAsync(userRepository);
             //userRepository.Clear();
             services.AddSingleton(loader);
+
             services.AddSingleton<IUserRepository>(userRepository);
             services.AddSingleton(userRepository);
-
             services.AddSingleton<MessageSender>();
             services.AddSingleton<EventService>();
             services.AddSingleton<RegistrationService>();
             services.AddSingleton<ResponseManager>();
-            services.AddSingleton<ICommandFactory, CommandStateFactory>();
-            services.AddSingleton<IStateFactory, CommandStateFactory>();
-            services.AddSingleton<CommandStateFactory>();
+
+            services.AddSingleton<CommandRegistry>();
+            services.AddSingleton<ICommandFactory, CommandFactory>();
+
+            services.AddSingleton<IStateFactory, StateFactory>();
+            services.AddSingleton<IMenuStateFactory, MenuStateFactory>();
+            services.AddSingleton<StateFactory>();
+
             services.AddSingleton<PrivateMessageHandler>();
             services.AddSingleton<TargetChatMessageHandler>();
             services.AddSingleton<GeneralCallbackQueryHandler>();

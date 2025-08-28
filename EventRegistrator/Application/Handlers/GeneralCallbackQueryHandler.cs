@@ -1,7 +1,9 @@
-﻿using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Domain;
-using EventRegistrator.Domain.Models;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Enums;
+using EventRegistrator.Application.Factories;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Handlers
@@ -9,16 +11,15 @@ namespace EventRegistrator.Application.Handlers
     public class GeneralCallbackQueryHandler : IHandler
     {
         private readonly IUserRepository _userRepository;
-        private readonly CommandStateFactory _commandStateFactory;
+        private readonly ICommandFactory _commandFactory;
+        private readonly IStateFactory _stateFactory;
         private readonly ILogger<GeneralCallbackQueryHandler> _logger;
 
-        public GeneralCallbackQueryHandler(
-            IUserRepository userRepository,
-            CommandStateFactory commandStateFactory,
-            ILogger<GeneralCallbackQueryHandler> logger)
+        public GeneralCallbackQueryHandler(IUserRepository userRepository, ICommandFactory commandFactory, IStateFactory stateFactory, ILogger<GeneralCallbackQueryHandler> logger)
         {
             _userRepository = userRepository;
-            _commandStateFactory = commandStateFactory;
+            _commandFactory = commandFactory;
+            _stateFactory = stateFactory;
             _logger = logger;
         }
 
@@ -31,16 +32,18 @@ namespace EventRegistrator.Application.Handlers
                 _logger.LogWarning("User not found for chat {ChatId}", message.ChatId);
                 return new List<Response>();
             }
+            var commandName = CommandTypeResolver.DetermineCommandName(message, user);
+            if (commandName != null)
+            {
+                var command = _commandFactory.CreateCommand(commandName);
+                return await command.Execute(message, user);
+            }
             if (user.State != null)
             {
                 var response = await user.State.Execute(message, user);
                 return response;
             }
-            if (message.Text.StartsWith("Cancel"))
-            {
-                var cancelCommand = _commandStateFactory.CreateCommand(Objects.Enums.CommandType.CancelRegistrations);
-                return await cancelCommand.Execute(message, user);
-            }
+            
             _logger.LogError("Failed to handle callback {MessageDTO}", message.Text);
             return [];
         }

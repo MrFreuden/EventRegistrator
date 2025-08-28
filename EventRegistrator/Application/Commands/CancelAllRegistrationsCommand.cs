@@ -1,10 +1,14 @@
-﻿using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Services;
+using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
+using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.Commands
 {
+    [CallbackCommand("Cancel", "Отменить все регистрации")]
     public class CancelAllRegistrationsCommand : ICommand
     {
         private readonly ResponseManager _responseManager;
@@ -24,7 +28,7 @@ namespace EventRegistrator.Application.Commands
             if (resultUndo.Success)
             {
                 var text = TimeSlotParser.UpdateTemplateText(lastEvent.TemplateText, lastEvent.Slots);
-                lastEvent.TemplateText = text;
+                lastEvent.UpdateTemplate(text);
             }
 
             return GetSuccessResponsesForEdit(user, resultUndo);

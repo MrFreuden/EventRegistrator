@@ -1,4 +1,4 @@
-﻿using EventRegistrator.Application.Objects.DTOs;
+﻿using EventRegistrator.Application.DTOs;
 using EventRegistrator.Domain;
 using EventRegistrator.Domain.Models;
 

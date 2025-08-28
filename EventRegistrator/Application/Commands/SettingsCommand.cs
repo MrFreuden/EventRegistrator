@@ -1,23 +1,26 @@
-﻿using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Application.Objects.Enums;
+﻿using EventRegistrator.Application.Commands.Attributes;
+using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Enums;
+using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Domain;
+using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Commands
 {
+    [Command("/settings", "Настройки")]
     public class SettingsCommand : ICommand
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IMenuStateFactory _menuStateFactory;
 
-        public SettingsCommand(IUserRepository userRepository)
+        public SettingsCommand(IMenuStateFactory menuStateFactory)
         {
-            _userRepository = userRepository;
+            _menuStateFactory = menuStateFactory;
         }
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var state = new StartMenuCommand(_userRepository, MenuKey.TargetChats);
+            var state = new StartMenuCommand(_menuStateFactory, MenuKey.TargetChats);
             return await state.Execute(message, user);
         }
     }

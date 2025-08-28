@@ -1,8 +1,9 @@
-﻿using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Enums;
+using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.Objects;
-using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Application.Objects.Enums;
-using EventRegistrator.Domain;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Interfaces;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.States
@@ -112,13 +113,11 @@ namespace EventRegistrator.Application.States
             switch (action)
             {
                 case NavigateMenu nm:
-                    user.StateHistory.Push(this);
-                    user.State = new MenuState(_menuService, nm.NextKey, nm.Ctx, nm.StartPage);
+                    user.SetCurrentState(new MenuState(_menuService, nm.NextKey, nm.Ctx, nm.StartPage));
                     return [await user.State.Handle(message, user)];
 
                 case SwitchState ss:
-                    user.StateHistory.Push(this);
-                    user.State = ss.Factory();
+                    user.SetCurrentState(ss.Factory());
                     return [await user.State.Handle(message, user)];
 
                 case RunCommand rc:

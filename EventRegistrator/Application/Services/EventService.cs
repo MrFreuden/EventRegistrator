@@ -1,5 +1,6 @@
-﻿using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Domain;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Interfaces;
 using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Services
@@ -17,9 +18,6 @@ namespace EventRegistrator.Application.Services
         public RegistrationResult AddNewEvent(Event @event, DateTime eventTime)
         {
             var user = _userRepository.GetUserByTargetChat(@event.TargetChatId);
-            var slots = TimeSlotParser.ExtractTimeSlotsFromTemplate(@event.TemplateText, eventTime);
-
-            @event.AddSlots(slots);
             user.AddEvent(@event);
 
             return new RegistrationResult { Event = @event, Success = true };
@@ -28,7 +26,12 @@ namespace EventRegistrator.Application.Services
         public static Event Create(MessageDTO message)
         {
             var hashtagName = ParseHashtagName(message.Text);
-            return new Event(_defaultTitle, message.Id, message.ChatId, hashtagName);
+            return new Event(message.Created.ToString(), message.Id, message.ChatId, hashtagName);
+        }
+
+        public void EditTimeSlots(Event @event, string templateText)
+        {
+
         }
 
         private static string ParseHashtagName(string text)

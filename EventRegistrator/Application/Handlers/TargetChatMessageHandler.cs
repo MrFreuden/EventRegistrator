@@ -1,6 +1,8 @@
-﻿using EventRegistrator.Application.Interfaces;
-using EventRegistrator.Application.Objects.DTOs;
-using EventRegistrator.Domain;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Factories;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Interfaces;
 using EventRegistrator.Domain.Models;
 using Microsoft.Extensions.Logging;
 
@@ -28,31 +30,31 @@ namespace EventRegistrator.Application.Handlers
                 return new List<Response>();
             }
 
-            var commandType = CommandTypeResolver.DetermineCommandType(message, user);
-            if (commandType == null)
+            var commandName = CommandTypeResolver.DetermineCommandName(message, user);
+            if (commandName == null)
             {
                 _logger.LogWarning("HandleEditAsync: command type not determined for user {UserId}", user.Id);
                 return new List<Response>();
             }
 
-            var command = _commandFactory.CreateCommand(commandType.Value);
+            var command = _commandFactory.CreateCommand(commandName);
             if (command == null)
             {
-                _logger.LogError("HandleEditAsync: failed to create command for type {CommandType}", commandType.Value);
+                _logger.LogError("HandleEditAsync: failed to create command for type {CommandType}", commandName);
                 return new List<Response>();
             }
 
             var result = await command.Execute(message, user);
 
-            var commandType2 = CommandTypeResolver.DetermineCommandType(message, user);
-            var command2 = _commandFactory.CreateCommand(commandType2.Value);
+            var commandName2 = CommandTypeResolver.DetermineCommandName(message, user);
+            var command2 = _commandFactory.CreateCommand(commandName2);
             if (command2 != null)
             {
                 result.AddRange(await command2.Execute(message, user));
             }
             else
             {
-                _logger.LogError("HandleEditAsync: failed to create second command for type {CommandType}", commandType2);
+                _logger.LogError("HandleEditAsync: failed to create second command for type {CommandType}", commandName2);
             }
             await _userRepository.Save(user);
             return result;
@@ -72,20 +74,20 @@ namespace EventRegistrator.Application.Handlers
                 return new List<Response>();
             }
 
-            var commandType = CommandTypeResolver.DetermineCommandType(message, user);
-            if (commandType == null)
+            var commandName = CommandTypeResolver.DetermineCommandName(message, user);
+            if (commandName == null)
             {
                 _logger.LogWarning("HandleAsync: command type not determined for user {UserId}", user.Id);
                 return new List<Response>();
             }
 
-            var command = _commandFactory.CreateCommand(commandType.Value);
+            var command = _commandFactory.CreateCommand(commandName);
             if (command == null)
             {
-                _logger.LogError("HandleAsync: failed to create command for type {CommandType}", commandType.Value);
+                _logger.LogError("HandleAsync: failed to create command for type {CommandType}", commandName);
                 return new List<Response>();
             }
-            user.CurrentContext = new Objects.MenuContext(user.PrivateChatId, message.ChatId);
+            
             var response = await command.Execute(message, user);
             if (response == null || response.Count == 0)
             {
