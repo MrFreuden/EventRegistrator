@@ -42,9 +42,18 @@ namespace EventRegistrator.Infrastructure.Telegram
         {
             foreach (var message in messages)
             {
-                var sentMessage = await _messageSender.SendMessage(message);
-
-                message.SaveMessageIdCallback?.Invoke(sentMessage.MessageId);
+                try
+                {
+                    var sentMessage = await _messageSender.SendMessage(message);
+                    message.SaveMessageIdCallback?.Invoke(sentMessage.MessageId);
+                }
+                catch (Exception ex)
+                {
+                    // Логируем ошибку, чтобы не падал весь цикл
+                    // Можно использовать ваш логгер, если он есть
+                    Console.WriteLine($"Ошибка при отправке сообщения: {ex}");
+                    Console.WriteLine($"Данные сообщения: ChatId={message.ChatId}, Text={message.Text}, MessageToEditId={message.MessageToEditId}, MessageToReplyId={message.MessageToReplyId}, Like={message.Like}, UnLike={message.UnLike}");
+                }
             }
         } 
     }

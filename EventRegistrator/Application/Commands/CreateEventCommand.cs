@@ -23,7 +23,7 @@ namespace EventRegistrator.Application.Commands
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
             var @event = EventService.Create(message);
-            @event.UpdateTemplate(user.GetTargetChat(user.CurrentContext.TargetChatId.Value).GetHashtagByName(@event.HashtagName).TemplateText);
+            @event.UpdateTemplate(user.GetTargetChat(message.ChatId).GetHashtagByName(@event.HashtagName).TemplateText);
             @event.AddSlots(TimeSlotParser.ExtractTimeSlotsFromTemplate(@event.TemplateText));
             var result = _eventService.AddNewEvent(@event, message.Created);
             if (result.Success)
