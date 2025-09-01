@@ -23,6 +23,7 @@ namespace EventRegistrator.Application.Services
                 {
                     ChatId = lastEvent.TargetChatId,
                     Text = lastEvent.TemplateText,
+                    MessageToReplyId = lastEvent.PostId,
                     SaveMessageIdCallback = id => { lastEvent.CommentMessageId = id; },
                     ButtonData = new("Скасувати записи", Constants.Cancel),
                 };
@@ -34,6 +35,7 @@ namespace EventRegistrator.Application.Services
                 {
                     ChatId = lastEvent.TargetChatId,
                     Text = lastEvent.TemplateText,
+                    //MessageToReplyId= lastEvent.PostId,
                     MessageToEditId = lastEvent.CommentMessageId,
                     ButtonData = new("Скасувати записи", Constants.Cancel),
                 };
