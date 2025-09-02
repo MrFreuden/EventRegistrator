@@ -11,7 +11,7 @@ namespace EventRegistrator.Infrastructure.Telegram
             {
                 ChatId = message.Chat.Id,
                 Id = message.MessageId,
-                Text = message.Text,
+                Text = message.Text ?? message.Caption,
                 UserId = message.From?.Id,
                 ReplyToMessageId = message.ReplyToMessage?.Id,
                 Created = message.Date,
