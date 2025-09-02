@@ -56,7 +56,7 @@ namespace EventRegistrator.Domain.Models
 
         public IReadOnlyCollection<Event> GetEvents(long targetChatId)
         {
-            var events = _events.Where(e => e.TargetChatId == targetChatId).ToList();
+            var events = _events.Where(e => e.TargetChatId == targetChatId).Reverse().ToList();
             return events;
         }
 

@@ -1,4 +1,5 @@
 ﻿using EventRegistrator.Domain.DTO;
+using System.Runtime.InteropServices;
 using Telegram.Bot.Types;
 
 namespace EventRegistrator.Infrastructure.Telegram
@@ -14,10 +15,17 @@ namespace EventRegistrator.Infrastructure.Telegram
                 Text = message.Text ?? message.Caption,
                 UserId = message.From?.Id,
                 ReplyToMessageId = message.ReplyToMessage?.Id,
-                Created = message.Date,
+                Created = TimeZoneInfo.ConvertTimeFromUtc(
+                    message.Date,
+                    TimeZoneInfo.FindSystemTimeZoneById(
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                            ? "FLE Standard Time"
+                            : "Europe/Kyiv"
+                    )
+                ),
             };
 
-            if (messageDto.ReplyToMessageId != null) 
+            if (messageDto.ReplyToMessageId != null)
                 messageDto.IsReply = true;
 
             if (message.ForwardFromChat != null)
