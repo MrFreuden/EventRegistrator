@@ -46,10 +46,10 @@ namespace TimeSlotParserTests
 
             Assert.That(result[0].UserId, Is.EqualTo(123456789));
             Assert.That(result[0].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0))); // 1-й слот
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); // 1-й слот
 
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0))); // 2-й слот
-            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 12, 0, 0))); // 3-й слот
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0))); // 2-й слот
+            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(12, 0, 0))); // 3-й слот
         }
 
         [Test]
@@ -64,9 +64,9 @@ namespace TimeSlotParserTests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(3));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0)));
-            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 12, 0, 0)));
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
+            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(12, 0, 0)));
         }
 
         [Test]
@@ -82,11 +82,11 @@ namespace TimeSlotParserTests
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(4));
             Assert.That(result[0].Name, Is.EqualTo("Karlenko L."));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0)));
-            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 12, 0, 0)));
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
+            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(12, 0, 0)));
             Assert.That(result[3].Name, Is.EqualTo("Karlenko N."));
-            Assert.That(result[3].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
+            Assert.That(result[3].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
         }
 
         [Test]
@@ -101,8 +101,8 @@ namespace TimeSlotParserTests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(2));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0)));
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
         }
 
         [Test]
@@ -117,8 +117,8 @@ namespace TimeSlotParserTests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(2));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0)));
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
         }
 
         [Test]
@@ -136,14 +136,14 @@ namespace TimeSlotParserTests
             Assert.That(result.Count, Is.EqualTo(4));
 
             Assert.That(result[0].Name, Is.EqualTo("Karlenko L."));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
             Assert.That(result[1].Name, Is.EqualTo("Karlenko L."));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0)));
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
 
             Assert.That(result[2].Name, Is.EqualTo("Karlenko M."));
-            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
+            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
             Assert.That(result[3].Name, Is.EqualTo("Karlenko M."));
-            Assert.That(result[3].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0)));
+            Assert.That(result[3].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
         }
 
         [Test]
@@ -161,12 +161,12 @@ namespace TimeSlotParserTests
             Assert.That(result.Count, Is.EqualTo(3));
 
             Assert.That(result[0].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0))); // слот 1
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); // слот 1
             Assert.That(result[1].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 11, 0, 0))); // слот 2
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0))); // слот 2
 
             Assert.That(result[2].Name, Is.EqualTo("Tom"));
-            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0))); // время 10:00
+            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); // время 10:00
         }
 
         [Test]
@@ -186,7 +186,7 @@ namespace TimeSlotParserTests
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(1));
             Assert.That(result[0].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
         }
 
         [Test]
@@ -206,7 +206,7 @@ namespace TimeSlotParserTests
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(1));
             Assert.That(result[0].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new DateTime(2025, 8, 8, 10, 0, 0)));
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
         }
     }
 }
