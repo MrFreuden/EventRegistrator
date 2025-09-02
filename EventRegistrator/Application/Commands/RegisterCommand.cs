@@ -36,6 +36,11 @@ namespace EventRegistrator.Application.Commands
 
             var map = TimeSlotParser.GetMaper(@event.TemplateText);
             var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
+            if (regs.Count == 0)
+            {
+                Console.WriteLine("Неудалость распарись сообщение для регистраниции");
+                return [];
+            }
 
             var result = _registrationService.ProcessRegistration(@event, regs);
             if (result.Success)
