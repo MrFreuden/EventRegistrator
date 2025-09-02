@@ -19,7 +19,8 @@ namespace EventRegistrator.Infrastructure.Telegram
 
         public async Task ProcessMessage(Message message)
         {
-            if (message.Type == MessageType.MigrateFromChatId || message.Type == MessageType.MigrateToChatId || message.Text == null) return;
+            if (message.Type == MessageType.MigrateFromChatId || message.Type == MessageType.MigrateToChatId) return;
+            if (message.Text == null && message.Caption == null) return;
             var messageDto = UpdateMapper.Map(message);
             var responses = GetResponse(messageDto);
             await ProcessMessagesAsync(responses.Result);
