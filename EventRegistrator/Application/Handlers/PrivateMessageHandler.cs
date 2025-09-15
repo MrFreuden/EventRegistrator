@@ -27,7 +27,7 @@ namespace EventRegistrator.Application.Handlers
             {
                 { "/start", () => new StartCommand(_userRepository) },
                 { "/settings", () => new SettingsCommand(_menuStateFactory) },
-                { "/admin", () => new AdminCommand(_userRepository) },
+                { "/admin", () => new AdminInfoCommand(_userRepository) },
                 { "/save", () => new AdminSaveCommand(_userRepository, _loader) }
             };
         }
