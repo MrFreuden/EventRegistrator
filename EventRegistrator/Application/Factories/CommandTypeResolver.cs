@@ -22,8 +22,6 @@ namespace EventRegistrator.Application.Factories
                 return "DeleteRegistrations";
             if (IsFromChannel(message, user) && IsHasHashtag(message, user))
                 return "CreateEvent";
-            if (message.Text.Equals(Constants.Cancel))
-                return "Cancel";
             if (message.Text.EndsWith('?'))
                 return string.Empty;
             if (message.Text == "-")
