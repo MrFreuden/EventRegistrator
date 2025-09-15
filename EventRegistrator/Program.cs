@@ -194,31 +194,53 @@ namespace EventRegistrator
                     using var reader = new StreamReader(ctx.Request.InputStream);
                     var body = await reader.ReadToEndAsync();
 
-                    // Логируем JSON, который пришёл
-                    Log.Information("Received update JSON: {Body}", body);
-
-                    var options = new JsonSerializerOptions
+                    try 
                     {
-                        PropertyNameCaseInsensitive = true
-                    };
+                        var update = JsonSerializer.Deserialize<Update>(body, new JsonSerializerOptions 
+                        { 
+                            PropertyNameCaseInsensitive = true 
+                        });
+                        
+                        if (update != null)
+                        {
+                            if (update.Message != null)
+                            {
+                                Log.Information(
+                                    "Получено сообщение: ID={MessageId}, Чат={ChatId}, От={FromUser}, Текст={Text}",
+                                    update.Message.MessageId,
+                                    update.Message.Chat.Id,
+                                    $"{update.Message.From?.FirstName} {update.Message.From?.LastName} (@{update.Message.From?.Username})",
+                                    update.Message.Text ?? update.Message.Caption ?? "[без текста]"
+                                );
+                            }
+                            else if (update.CallbackQuery != null)
+                            {
+                                Log.Information(
+                                    "Получен callback: Данные={Data}, От={FromUser}",
+                                    update.CallbackQuery.Data,
+                                    $"{update.CallbackQuery.From.FirstName} {update.CallbackQuery.From.LastName} (@{update.CallbackQuery.From.Username})"
+                                );
+                            }
+                            else if (update.EditedMessage != null)
+                            {
+                                Log.Information(
+                                    "Получено отредактированное сообщение: ID={MessageId}, Чат={ChatId}, Текст={Text}",
+                                    update.EditedMessage.MessageId,
+                                    update.EditedMessage.Chat.Id,
+                                    update.EditedMessage.Text ?? update.EditedMessage.Caption ?? "[без текста]"
+                                );
+                            }
 
-                    Update? update = null;
-                    try
-                    {
-                        update = JsonSerializer.Deserialize<Update>(body, options);
+                            await handler.HandleUpdateAsync(bot, update, token);
+                        }
+                        else
+                        {
+                            Log.Warning("Получен POST без валидного Update");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning(ex, "Failed to deserialize Update");
-                    }
-
-                    if (update != null)
-                    {
-                        await handler.HandleUpdateAsync(bot, update, token);
-                    }
-                    else
-                    {
-                        Log.Warning("Received POST without valid Update");
+                        Log.Warning(ex, "Ошибка при обработке обновления");
                     }
 
                     ctx.Response.StatusCode = 200;
@@ -227,11 +249,11 @@ namespace EventRegistrator
                 }
                 catch (HttpListenerException ex) when (ex.ErrorCode == 995)
                 {
-                    Log.Information("HttpListener stopped");
+                    Log.Information("HttpListener остановлен");
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Unhandled error in HTTP handler");
+                    Log.Error(ex, "Необработанная ошибка в HTTP-обработчике");
                     if (ctx != null)
                     {
                         try
@@ -240,7 +262,7 @@ namespace EventRegistrator
                             await ctx.Response.OutputStream.FlushAsync();
                             ctx.Response.Close();
                         }
-                        catch { /* ignore */ }
+                        catch { /* игнорируем */ }
                     }
                 }
             }
