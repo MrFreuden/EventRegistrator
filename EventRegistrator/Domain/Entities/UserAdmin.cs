@@ -29,13 +29,19 @@ namespace EventRegistrator.Domain.Models
             _targetChats = new();
         }
 
-        public void AddEvent(Event @event)
+        public bool AddEvent(Event @event)
         {
             if (_events.Count > 6)
             {
                 _events.RemoveRange(0, 4);
             }
+            if (_events.Any(e => e.PostId == @event.PostId))
+            {
+                Console.WriteLine("Уже есть ивент к этому посту");
+                return false;
+            }
             _events.Add(@event);
+            return true;
         }
 
         public Event GetLastEvent()
