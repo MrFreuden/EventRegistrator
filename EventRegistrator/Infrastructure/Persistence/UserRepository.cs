@@ -85,7 +85,7 @@ namespace EventRegistrator.Infrastructure.Persistence
                 _users[user.Id] = user;
             }
 
-            await _loader.SaveDataAsync(this);
+            //await _loader.SaveDataAsync(this);
         }
     }
 }

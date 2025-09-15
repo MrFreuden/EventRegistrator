@@ -20,6 +20,13 @@ namespace EventRegistrator
 {
     internal class Program
     {
+        private static Timer _saveTimer;
+        private static UserRepository _userRepository;
+        private static RepositoryLoader _loader;
+        private static readonly object _saveLock = new();
+        private static bool _isSaving = false;
+        private static readonly TimeSpan SaveInterval = TimeSpan.FromHours(6);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern IntPtr GetConsoleWindow();
 
@@ -101,6 +108,7 @@ namespace EventRegistrator
             using var cts = new CancellationTokenSource();
             Log.Information("Starting in polling mode...");
             bot.StartReceiving(handler.HandleUpdateAsync, handler.HandleErrorAsync, cancellationToken: cts.Token);
+            StartPeriodicSaving(cts.Token);
             Log.Information("Bot is running (polling). Press Ctrl+C to exit.");
             await WaitForShutdown(cts);
             Log.Information("Polling stopped.");
@@ -119,6 +127,7 @@ namespace EventRegistrator
             listener.Start();
             Log.Information("Listening HTTP on port {Port}", port);
 
+            StartPeriodicSaving(cts.Token);
             var httpTask = HandleHttp(listener, bot, handler, cts.Token);
             var shutdownTask = WaitForShutdown(cts);
             await Task.WhenAny(httpTask, shutdownTask);
@@ -142,6 +151,9 @@ namespace EventRegistrator
             //loader.SaveDataAsync(userRepository);
             //userRepository.Clear();
             services.AddSingleton(loader);
+
+            _userRepository = userRepository;
+            _loader = loader;
 
             services.AddSingleton<IUserRepository>(userRepository);
             services.AddSingleton(userRepository);
@@ -173,6 +185,43 @@ namespace EventRegistrator
                 ));
             services.AddSingleton<MessageHandler>();
             services.AddSingleton<CallbackQueryHandler>();
+        }
+
+        private static void StartPeriodicSaving(CancellationToken token)
+        {
+            _saveTimer = new Timer(async _ => 
+            {
+                if (_isSaving) return;
+                
+                lock (_saveLock)
+                {
+                    if (_isSaving) return;
+                    _isSaving = true;
+                }
+                
+                try
+                {
+                    Log.Information("Выполняется плановое сохранение данных...");
+                    await _loader.SaveDataAsync(_userRepository);
+                    Log.Information("Плановое сохранение завершено успешно");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Ошибка при выполнении планового сохранения");
+                }
+                finally
+                {
+                    _isSaving = false;
+                }
+            }, null, TimeSpan.Zero, SaveInterval);
+            
+            token.Register(async () => 
+            {
+                _saveTimer?.Dispose();
+                Log.Information("Выполняется финальное сохранение данных перед завершением...");
+                await _loader.SaveDataAsync(_userRepository);
+                Log.Information("Финальное сохранение завершено");
+            });
         }
 
         private static async Task HandleHttp(HttpListener listener, ITelegramBotClient bot, BotHandler handler, CancellationToken token)
