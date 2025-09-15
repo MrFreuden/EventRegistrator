@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.DTOs;
 using EventRegistrator.Application.Factories;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Domain.DTO;
@@ -45,10 +46,11 @@ namespace EventRegistrator.Application.Handlers
             }
 
             var result = await command.Execute(message, user);
+            message.IsEdit = false;
 
             var commandName2 = CommandTypeResolver.DetermineCommandName(message, user);
             var command2 = _commandFactory.CreateCommand(commandName2);
-            if (command2 != null)
+            if (command2 != null && command2 is RegisterCommand)
             {
                 result.AddRange(await command2.Execute(message, user));
             }
