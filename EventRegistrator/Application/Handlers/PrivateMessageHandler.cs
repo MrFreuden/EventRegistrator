@@ -4,6 +4,7 @@ using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Interfaces;
+using EventRegistrator.Infrastructure.Persistence;
 using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Handlers
@@ -13,18 +14,21 @@ namespace EventRegistrator.Application.Handlers
         private readonly IUserRepository _userRepository;
         private readonly IMenuStateFactory _menuStateFactory;
         private readonly ILogger<PrivateMessageHandler> _logger;
+        private readonly RepositoryLoader _loader;
         private readonly Dictionary<string, Func<ICommand>> _commands;
 
-        public PrivateMessageHandler(IUserRepository userRepository, IMenuStateFactory menuStateFactory, ILogger<PrivateMessageHandler> logger)
+        public PrivateMessageHandler(IUserRepository userRepository, IMenuStateFactory menuStateFactory, ILogger<PrivateMessageHandler> logger, RepositoryLoader loader)
         {
             _userRepository = userRepository;
             _menuStateFactory = menuStateFactory;
             _logger = logger;
+            _loader = loader;
             _commands = new Dictionary<string, Func<ICommand>>
             {
                 { "/start", () => new StartCommand(_userRepository) },
                 { "/settings", () => new SettingsCommand(_menuStateFactory) },
-                { "/admin", () => new AdminCommand(_userRepository) }
+                { "/admin", () => new AdminCommand(_userRepository) },
+                { "/save", () => new AdminSaveCommand(_userRepository, _loader) }
             };
         }
 
