@@ -18,6 +18,8 @@ namespace EventRegistrator.Application.Factories
             {
                 throw new ArgumentNullException(nameof(user));
             }
+            if (message.Text.StartsWith('/'))
+                return message.Text;
             if (message.IsEdit && IsReplyToPostMessage(message, user))
                 return "DeleteRegistrations";
             if (IsFromChannel(message, user) && IsHasHashtag(message, user))
