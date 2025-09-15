@@ -31,7 +31,7 @@ namespace EventRegistrator.Application.Handlers
             }
 
             var commandName = CommandTypeResolver.DetermineCommandName(message, user);
-            if (commandName == null)
+            if (string.IsNullOrEmpty(commandName))
             {
                 _logger.LogWarning("HandleEditAsync: command type not determined for user {UserId}", user.Id);
                 return new List<Response>();

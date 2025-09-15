@@ -5,6 +5,7 @@ using EventRegistrator.Application.Services;
 using EventRegistrator.Application.States;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
+using Telegram.Bot.Types;
 
 namespace EventRegistrator.Application.Factories
 {
@@ -40,6 +41,8 @@ namespace EventRegistrator.Application.Factories
 
         public ICommand CreateCommand(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
             var type = _registry.GetSlashCommand(name) ??
                    _registry.GetCallbackCommand(name);
 
