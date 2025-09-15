@@ -5,17 +5,16 @@ using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Commands
 {
-    [CallbackCommand("Cancel", "Отменить все регистрации, всех сообщений")]
-    public class CancelAllRegistrationsCommand : ICommand
+    [Command("DeleteRegistrationsByName", "Удаление регистраций по имени")]
+    public class DeleteReigstrationsByNameCommand : ICommand
     {
         private readonly ResponseManager _responseManager;
         private readonly RegistrationService _registrationService;
 
-        public CancelAllRegistrationsCommand(RegistrationService registrationService, ResponseManager responseManager)
+        public DeleteReigstrationsByNameCommand(ResponseManager responseManager, RegistrationService registrationService)
         {
             _responseManager = responseManager;
             _registrationService = registrationService;
@@ -28,26 +27,30 @@ namespace EventRegistrator.Application.Commands
             {
                 Console.WriteLine("Не удалось найти ивент");
                 return [];
+
             }
-            var resultUndo = _registrationService.CancelAllRegistrations(@event, message.UserId.Value);
+
+            var name = message.Text?.Trim('-', ' ');
+
+            var resultUndo = _registrationService.CancelRegistration(@event, name);
             if (resultUndo.Success)
             {
                 var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
                 @event.UpdateTemplate(text);
-                return GetSuccessResponsesForEdit(user, resultUndo);
+                return GetSuccessResponsesForEdit(user, resultUndo, message.Id);
             }
+
             return [];
-            
         }
 
-        private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result)
+        private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result, int messageId)
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
             foreach (var id in result.MessageIds)
             {
                 messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, id));
             }
-            
+            messages.Add(_responseManager.CreateLikeMessage(result.Event.TargetChatId, messageId));
             return messages;
         }
     }

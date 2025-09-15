@@ -22,10 +22,16 @@ namespace EventRegistrator.Application.Factories
                 return "DeleteRegistrations";
             if (IsFromChannel(message, user) && IsHasHashtag(message, user))
                 return "CreateEvent";
-            if (IsReplyToPostMessage(message, user))
-                return "Register";
             if (message.Text.Equals(Constants.Cancel))
                 return "Cancel";
+            if (message.Text.EndsWith('?'))
+                return string.Empty;
+            if (message.Text == "-")
+                return "DeleteRegistrations";
+            if (message.Text.EndsWith('-'))
+                return "DeleteRegistrationsByName";
+            if (IsReplyToPostMessage(message, user))
+                return "Register";
             return null;
         }
 

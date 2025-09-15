@@ -5,6 +5,7 @@
         public long ChatId { get; set; }
         public int Id { get; set; }
         public long? UserId { get; set; }
+        public int? ThreadId { get; set; }
         public string? Text { get; set; }
         public bool IsReply { get; set; }
         public int? ReplyToMessageId { get; set; }

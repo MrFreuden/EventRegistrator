@@ -35,6 +35,11 @@ namespace EventRegistrator.Infrastructure.Telegram
                 messageDto.ReplyToMessage = Map(message.ReplyToMessage);
             }
 
+            if (message.MessageThreadId != null)
+            {
+                messageDto.ThreadId = message.MessageThreadId;
+            }
+
             return messageDto;
         }
 

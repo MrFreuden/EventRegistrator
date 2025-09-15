@@ -25,6 +25,7 @@ namespace EventRegistrator.Application.Services
                     Text = lastEvent.TemplateText,
                     MessageToReplyId = lastEvent.PostId,
                     SaveMessageIdCallback = id => { lastEvent.CommentMessageId = id; },
+                    SaveMessageThreadIdCallback = id => { lastEvent.ThreadId = id; },
                     ButtonData = new("Скасувати записи", Constants.Cancel),
                 };
                 return firstCommentUpdateMessage;

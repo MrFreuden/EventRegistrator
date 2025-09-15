@@ -5,11 +5,10 @@ using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Commands
 {
-    [Command("DeleteRegistrations", "Удаление регистраций")]
+    [Command("DeleteRegistrations", "Удаление регистраций в одном сообщении")]
     public class DeleteRegistrationsCommand : ICommand
     {
         private readonly ResponseManager _responseManager;
@@ -23,22 +22,42 @@ namespace EventRegistrator.Application.Commands
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var @event = user.GetEvent(message.ReplyToMessageId ?? 0);
+            var @event = user.GetEvent(message.ChatId, message.ThreadId ?? 0);
             if (@event == null)
             {
                 Console.WriteLine("Не удалось найти ивент");
                 return [];
             }
 
-            var resultUndo = _registrationService.CancelRegistration(@event, message.Id);
-            if (resultUndo.Success)
+            if (message.IsReply && message.ReplyToMessageId == @event.PostId)
             {
-                message.IsEdit = false;
-                var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
-                @event.UpdateTemplate(text);
+                var resultUndo = _registrationService.CancelRegistration(@event, message.Id);
+                if (resultUndo.Success)
+                {
+                    message.IsEdit = false;
+                    var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
+                    @event.UpdateTemplate(text);
+                    return GetSuccessResponsesForEdit(user, resultUndo);
+                }
+
+                return [];
             }
-          
-            return GetSuccessResponsesForEdit(user, resultUndo);
+
+            else if (message.IsReply && message.UserId == message.ReplyToMessage?.UserId)
+            {
+                var resultUndo = _registrationService.CancelRegistration(@event, message.ReplyToMessageId ?? 0);
+                if (resultUndo.Success)
+                {
+                    message.IsEdit = false;
+                    var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
+                    @event.UpdateTemplate(text);
+                    return GetSuccessResponsesForEdit(user, resultUndo);
+                }
+                return [];
+            }
+
+            Console.WriteLine("Ошибка при удалении регистраций");
+            return [];
         }
 
         private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result)

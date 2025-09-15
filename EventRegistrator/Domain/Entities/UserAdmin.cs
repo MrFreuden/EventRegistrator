@@ -48,9 +48,9 @@ namespace EventRegistrator.Domain.Models
             return _events.FirstOrDefault(e => e.Id == guid);
         }
 
-        public Event? GetEvent(int postId)
+        public Event? GetEvent(long targetChatId, int threadId)
         {
-            var s = _events.FirstOrDefault(e => e.PostId == postId);
+            var s = _events.Where(e => e.TargetChatId == targetChatId).FirstOrDefault(e => e.ThreadId == threadId);
             return s;
         }
 

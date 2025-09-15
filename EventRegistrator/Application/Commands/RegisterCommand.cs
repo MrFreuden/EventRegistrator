@@ -22,7 +22,7 @@ namespace EventRegistrator.Application.Commands
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var @event = user.GetEvent(message.ReplyToMessageId ?? 0);
+            var @event = user.GetEvent(message.ChatId, message.ThreadId ?? 0);
             if (@event == null)
             {
                 Console.WriteLine("Не удалось найти ивент");
