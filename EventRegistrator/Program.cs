@@ -189,16 +189,16 @@ namespace EventRegistrator
 
         private static void StartPeriodicSaving(CancellationToken token)
         {
-            _saveTimer = new Timer(async _ => 
+            _saveTimer = new Timer(async _ =>
             {
                 if (_isSaving) return;
-                
+
                 lock (_saveLock)
                 {
                     if (_isSaving) return;
                     _isSaving = true;
                 }
-                
+
                 try
                 {
                     Log.Information("Выполняется плановое сохранение данных...");
@@ -214,13 +214,39 @@ namespace EventRegistrator
                     _isSaving = false;
                 }
             }, null, TimeSpan.Zero, SaveInterval);
-            
-            token.Register(async () => 
+
+            token.Register(async () =>
             {
                 _saveTimer?.Dispose();
-                Log.Information("Выполняется финальное сохранение данных перед завершением...");
-                await _loader.SaveDataAsync(_userRepository);
-                Log.Information("Финальное сохранение завершено");
+                try
+                {
+                    Log.Information("Выполняется финальное сохранение данных перед завершением...");
+
+                    using var saveTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    var saveTask = _loader.SaveDataAsync(_userRepository);
+
+                    try
+                    {
+                        await Task.WhenAny(saveTask, Task.Delay(TimeSpan.FromSeconds(29), saveTimeoutCts.Token));
+
+                        if (saveTask.IsCompleted)
+                        {
+                            Log.Information("Финальное сохранение завершено успешно");
+                        }
+                        else
+                        {
+                            Log.Warning("Финальное сохранение не завершилось в отведенное время");
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Log.Warning("Сохранение прервано по таймауту");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Ошибка при финальном сохранении данных");
+                }
             });
         }
 
