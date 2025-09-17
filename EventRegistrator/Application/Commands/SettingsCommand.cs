@@ -20,7 +20,7 @@ namespace EventRegistrator.Application.Commands
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var state = new StartMenuCommand(_menuStateFactory, MenuKey.TargetChats);
+            var state = new StartMenuCommand(_menuStateFactory, MenuKey.Hashtags);
             return await state.Execute(message, user);
         }
     }
