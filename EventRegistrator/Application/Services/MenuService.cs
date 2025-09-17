@@ -81,7 +81,7 @@ namespace EventRegistrator.Application.Services
             MenuKey.Events => new MenuDescriptor(
                 Title: ctx =>
         $"Недавнi iвенти чату {_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).ChannelName}",
-                GetItems: () => _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvents(ctx.TargetChatId.Value),
+                GetItems: () => (IReadOnlyCollection<IPagiable>)_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvents(ctx.TargetChatId.Value).Reverse(),
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
