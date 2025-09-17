@@ -85,8 +85,6 @@ namespace EventRegistrator.Application.Services
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
-                new MenuExtra("Редагувати шаблон", Constants.EditTemplateText,
-                    c => new SwitchState(() =>  _stateFactory.CreateState(StateType.EditTemplateText))),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.Hashtags, ctx))
                 },
