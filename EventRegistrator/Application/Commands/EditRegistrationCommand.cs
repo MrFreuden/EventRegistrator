@@ -5,19 +5,22 @@ using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace EventRegistrator.Application.Commands
 {
-    [Command("DeleteRegistrations", "Удаление регистраций в одном сообщении")]
-    public class DeleteRegistrationsCommand : ICommand
+    [Command("EditRegistrations", "Редактиврование записи")]
+    public class EditRegistrationCommand : ICommand
     {
-        private readonly ResponseManager _responseManager;
         private readonly RegistrationService _registrationService;
+        private readonly ResponseManager _responseManager;
+        private readonly ILogger<EditRegistrationCommand> _logger;
 
-        public DeleteRegistrationsCommand(RegistrationService registrationService, ResponseManager responseManager)
+        public EditRegistrationCommand(RegistrationService registrationService, ResponseManager responseManager, ILogger<EditRegistrationCommand> logger)
         {
             _registrationService = registrationService;
             _responseManager = responseManager;
+            _logger = logger;
         }
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
@@ -25,38 +28,47 @@ namespace EventRegistrator.Application.Commands
             var @event = user.GetEvent(message.ChatId, message.ThreadId ?? 0);
             if (@event == null)
             {
-                Console.WriteLine("Не удалось найти ивент");
+                _logger.LogWarning("Событие не найдено: ChatId={ChatId}, ThreadId={ThreadId}", message.ChatId, message.ThreadId);
                 return [];
             }
-
             if (message.IsEdit && message.IsReply && message.ReplyToMessageId == @event.PostId)
             {
+                List<Response> responses = new();
                 var resultUndo = _registrationService.CancelRegistration(@event, message.Id);
                 if (resultUndo.Success)
                 {
                     message.IsEdit = false;
                     var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
                     @event.UpdateTemplate(text);
-                    return GetSuccessResponsesForEdit(user, resultUndo);
+                    responses.AddRange(GetSuccessResponsesForEdit(user, resultUndo));
+                }
+                else
+                {
+                    _logger.LogWarning("Не удалось отменить регистрацию при редактировании");
+                    return [];
                 }
 
-                return [];
-            }
-
-            else if (message.IsReply && message.UserId == message.ReplyToMessage?.UserId)
-            {
-                var resultUndo = _registrationService.CancelRegistration(@event, message.ReplyToMessageId ?? 0);
-                if (resultUndo.Success)
+                var map = TimeSlotParser.GetMaper(@event.TemplateText);
+                var regs = TimeSlotParser.ParseRegistrationMessage(message, map);
+                if (regs.Count == 0)
                 {
-                    message.IsEdit = false;
+                    _logger.LogWarning("Не удалось распарсить сообщение для регистранции при редактировании");
+                    return [];
+                }
+                var result = _registrationService.ProcessRegistration(@event, regs);
+                if (result.Success)
+                {
                     var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
                     @event.UpdateTemplate(text);
-                    return GetSuccessResponsesForEdit(user, resultUndo);
+                    result.MessageIds = [message.Id];
+                    responses.AddRange(GetSuccessResponsesForEdit(user, result));
                 }
-                return [];
+                else
+                {
+                    _logger.LogWarning("Не удалось добавить регистрации при редактировании");
+                    return responses;
+                }
             }
-
-            Console.WriteLine("Ошибка при удалении регистраций");
             return [];
         }
 

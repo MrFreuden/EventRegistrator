@@ -21,7 +21,7 @@ namespace EventRegistrator.Application.Factories
             if (message.Text.StartsWith('/'))
                 return message.Text;
             if (message.IsEdit && IsReplyToPostMessage(message, user))
-                return "DeleteRegistrations";
+                return "EditRegistrations";
             if (IsFromChannel(message, user) && IsHasHashtag(message, user))
                 return "CreateEvent";
             if (message.Text.EndsWith('?'))
