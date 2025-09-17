@@ -18,10 +18,14 @@ namespace EventRegistrator.Application.Commands
             _userRepository = userRepository;
         }
 
-        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user = null)
+        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
             _userRepository.AddUser(message.ChatId);
-            return [new Response { ChatId = message.ChatId, Text = Constants.Greetings }];
+            user.LastMessageId = null;
+            user.ClearStateHistory();
+            var response = new Response { ChatId = message.ChatId, Text = Constants.Greetings };
+            response.SaveMessageIdCallback = id => user.LastMessageId = id;
+            return [response];
         }
     }
 }

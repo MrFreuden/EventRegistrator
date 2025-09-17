@@ -12,7 +12,16 @@ namespace EventRegistrator.Application.Commands
         {
             if (EnvLoader.GetAdminId() == message.UserId)
             {
-                return await ExecuteAdminCommand(message);
+                user.LastMessageId = null;
+                user.ClearStateHistory();
+                var response = await ExecuteAdminCommand(message);
+                if (response.Count != 1)
+                {
+                    Console.WriteLine("Ошибка. Нетипичный ответ");
+                    return [];
+                }
+                response.First().SaveMessageIdCallback = id => user.LastMessageId = id;
+                return response;
             }
             return [];
         }

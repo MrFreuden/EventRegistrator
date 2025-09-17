@@ -55,7 +55,7 @@ namespace EventRegistrator.Application.Handlers
                 return response;
             }
 
-            if (user.State != null && user.State as DefaultState == null)
+            if (user.State != null)
             {
                 var response = await user.State.Execute(message, user);
                 if (response == null || response.Count == 0)
