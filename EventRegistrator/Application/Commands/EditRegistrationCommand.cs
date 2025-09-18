@@ -6,6 +6,7 @@ using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace EventRegistrator.Application.Commands
 {
@@ -41,6 +42,7 @@ namespace EventRegistrator.Application.Commands
                     var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
                     @event.UpdateTemplate(text);
                     responses.AddRange(GetSuccessResponsesForEdit(user, resultUndo));
+                    responses.Add(_responseManager.CreateUnlikeMessage(resultUndo.Event.TargetChatId, resultUndo.MessageIds.FirstOrDefault()));
                 }
                 else
                 {
@@ -62,12 +64,13 @@ namespace EventRegistrator.Application.Commands
                     @event.UpdateTemplate(text);
                     result.MessageIds = [message.Id];
                     responses.AddRange(GetSuccessResponsesForEdit(user, result));
+                    responses.Add(_responseManager.CreateLikeMessage(resultUndo.Event.TargetChatId, resultUndo.MessageIds.FirstOrDefault()));
                 }
                 else
                 {
                     _logger.LogWarning("Не удалось добавить регистрации при редактировании");
-                    return responses;
                 }
+                return responses;
             }
             return [];
         }
@@ -75,7 +78,6 @@ namespace EventRegistrator.Application.Commands
         private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result)
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
-            messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, result.MessageIds.FirstOrDefault()));
             return messages;
         }
     }

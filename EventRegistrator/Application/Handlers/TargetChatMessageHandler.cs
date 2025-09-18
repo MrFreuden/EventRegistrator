@@ -22,53 +22,8 @@ namespace EventRegistrator.Application.Handlers
             _logger = logger;
         }
 
-        public async Task<List<Response>> HandleEditAsync(MessageDTO message)
-        {
-            var user = _userRepository.GetUserByTargetChat(message.ChatId);
-            if (user == null)
-            {
-                _logger.LogWarning("HandleEditAsync: user not found for chat {ChatId}", message.ChatId);
-                return new List<Response>();
-            }
-
-            var commandName = CommandTypeResolver.DetermineCommandName(message, user);
-            if (string.IsNullOrEmpty(commandName))
-            {
-                _logger.LogWarning("HandleEditAsync: command type not determined for user {UserId}", user.Id);
-                return new List<Response>();
-            }
-
-            var command = _commandFactory.CreateCommand(commandName);
-            if (command == null)
-            {
-                _logger.LogError("HandleEditAsync: failed to create command for type {CommandType}", commandName);
-                return new List<Response>();
-            }
-
-            var result = await command.Execute(message, user);
-            message.IsEdit = false;
-
-            var commandName2 = CommandTypeResolver.DetermineCommandName(message, user);
-            var command2 = _commandFactory.CreateCommand(commandName2);
-            if (command2 != null && command2 is RegisterCommand)
-            {
-                result.AddRange(await command2.Execute(message, user));
-            }
-            else
-            {
-                _logger.LogError("HandleEditAsync: failed to create second command for type {CommandType}", commandName2);
-            }
-            await _userRepository.Save(user);
-            return result;
-        }
-
         public async Task<List<Response>> HandleAsync(MessageDTO message)
         {
-            if (message.IsEdit)
-            {
-                return await HandleEditAsync(message);
-            }
-
             var user = _userRepository.GetUserByTargetChat(message.ChatId);
             if (user == null)
             {
