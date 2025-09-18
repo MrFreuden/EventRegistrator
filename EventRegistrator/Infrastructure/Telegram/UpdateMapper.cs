@@ -5,6 +5,7 @@ namespace EventRegistrator.Infrastructure.Telegram
 {
     public static class UpdateMapper
     {
+        private static readonly TimeSpan _timeZoneOffset = TimeSpan.FromHours(3);
         public static MessageDTO Map(Message message)
         {
             var messageDto = new MessageDTO
@@ -14,7 +15,7 @@ namespace EventRegistrator.Infrastructure.Telegram
                 Text = message.Text ?? message.Caption,
                 UserId = message.From?.Id,
                 ReplyToMessageId = message.ReplyToMessage?.Id,
-                Created = message.Date,
+                Created = message.Date.Add(_timeZoneOffset),
             };
 
             if (messageDto.ReplyToMessageId != null) 
