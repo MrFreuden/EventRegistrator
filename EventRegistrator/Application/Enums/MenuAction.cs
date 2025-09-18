@@ -24,5 +24,6 @@ namespace EventRegistrator.Application.Enums
         Func<IReadOnlyCollection<IPagiable>>? GetItems,
         int PageSize,
         IReadOnlyList<MenuExtra> Extras,
-        Func<IPagiable, MenuAction>? OnItem);
+        Func<IPagiable, MenuAction>? OnItem,
+        int RowSize = 3);
 }

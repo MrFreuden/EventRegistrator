@@ -2,9 +2,12 @@
 using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.States;
+using EventRegistrator.Domain.DTO;
+using EventRegistrator.Domain.Entities;
 using EventRegistrator.Domain.Interfaces;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
+using System.Reflection.Metadata.Ecma335;
 
 namespace EventRegistrator.Application.Services
 {
@@ -13,6 +16,7 @@ namespace EventRegistrator.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IStateFactory _stateFactory;
         private const int _maxObjPerPage = 3;
+        private const int _participantPerPage = 9;
         public MenuService(IUserRepository userRepository, IStateFactory stateFactory)
         {
             _userRepository = userRepository;
@@ -102,17 +106,83 @@ namespace EventRegistrator.Application.Services
             ),
 
             MenuKey.EventDetailts => new MenuDescriptor(
-                Title: ctx => TextFormatter.FormatRegistrationsInfo(_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value)),
+                Title: ctx => $"Видалення відбувається по імені. Вибір однієї людини, видалить всі його записи \n\n{TextFormatter.FormatRegistrationsInfo(_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value))}",
                 GetItems: null,
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
                 new MenuExtra("Редагувати шаблон", Constants.EditTemplateText,
                     c => new SwitchState(() => _stateFactory.CreateState(StateType.EditTemplateText))),
+                new MenuExtra("Редагувати список", Constants.EditList,
+                    c => new NavigateMenu(MenuKey.List, ctx)),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.Events, ctx with { EventId = null }))
                 },
                 OnItem: null
+            ),
+
+            MenuKey.List => new MenuDescriptor(
+                Title: ctx =>
+                {
+                    var @event = _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value);
+                    return TextFormatter.FormatRegistrationsInfo(@event);
+                },
+                GetItems: () =>
+                {
+                    var @event = _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value);
+                    var participants = new List<ParticipantItem>();
+
+                    foreach (var slot in @event.Slots.OrderBy(s => s.Time))
+                    {
+                        var timeStr = slot.Time.ToString(@"hh\:mm");
+                        var registrations = TextFormatter.GetRegistrationsFromTimeSlot(slot);
+
+                        foreach (var reg in registrations)
+                        {
+                            participants.Add(new ParticipantItem(
+                                reg.Name,
+                                timeStr,
+                                reg.Name,
+                                slot.Time
+                            ));
+                        }
+                    }
+
+                    return participants;
+                },
+                PageSize: _participantPerPage,
+                Extras: new[]
+                {
+                    new MenuExtra("🔙 Назад", "back",
+                        _ => new NavigateMenu(MenuKey.EventDetailts, ctx))
+                },
+                OnItem: (ip) =>
+                {
+                    var participant = (ParticipantItem)ip;
+
+                    return new RunCommand((message, user) => {
+                        // Используем существующую команду удаления регистрации
+                        var responseManager = new ResponseManager();
+                        var registrationService = new RegistrationService();
+                        var command = new DeleteReigstrationsByNameCommand(responseManager, registrationService);
+
+                        // Формируем сообщение с именем участника для удаления
+                        var deleteMessage = new MessageDTO
+                        {
+                            ChatId = user.CurrentContext.TargetChatId.Value,
+                            Text = participant.ParticipantName + "-", // Добавляем дефис для соответствия формату команды
+                            ThreadId = user.CurrentContext?.EventId != null
+                                ? user.GetEvent(user.CurrentContext.EventId.Value).ThreadId : 0,
+                            Id = message.Id
+                        };
+
+                        var deleteResponses = command.Execute(deleteMessage, user).Result;
+                        user.SetCurrentState(new MenuState(this, MenuKey.List, user.CurrentContext, 0));
+                        var updatedResponse = user.State.Handle(message, user).Result;
+                        deleteResponses.Add(updatedResponse);
+                        return Task.FromResult(deleteResponses);
+                    });
+                }
             ),
 
             _ => throw new ArgumentOutOfRangeException(nameof(key), key, null)
