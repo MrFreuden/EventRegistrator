@@ -121,8 +121,8 @@ namespace EventRegistrator.Application.States
                     return [await user.State.Handle(message, user)];
 
                 case RunCommand rc:
-                    await rc.Do();
-                    return [await Handle(message, user)];
+                    var responses = await rc.Action(message, user);
+                    return responses ?? [new Response { /* ... */ }];
 
                 case Noop:
                 default:

@@ -9,5 +9,6 @@
         public const string AskForHashtag = "Введiть новий хештег, без \"#\"";
         public const string EditTemplateText = "EditTemplateText";
         public const string Pagination = "Pagination";
+        public const string DeleteHashtag = "DeleteHashtag";
     }
 }

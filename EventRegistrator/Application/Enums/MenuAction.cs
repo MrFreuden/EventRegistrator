@@ -1,5 +1,8 @@
-﻿using EventRegistrator.Application.Interfaces;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Interfaces;
+using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Interfaces;
+using EventRegistrator.Domain.Models;
 
 namespace EventRegistrator.Application.Enums
 {
@@ -12,7 +15,7 @@ namespace EventRegistrator.Application.Enums
 
     public record NavigateMenu(MenuKey NextKey, MenuContext Ctx, int StartPage = 0) : MenuAction;
     public record SwitchState(Func<IState> Factory) : MenuAction;
-    public record RunCommand(Func<Task> Do) : MenuAction;
+    public record RunCommand(Func<MessageDTO, UserAdmin, Task<List<Response>>> Action) : MenuAction;
     public record Noop(string? Reason = null) : MenuAction;
     public record MenuExtra(string Label, string Callback, Func<MenuContext, MenuAction> Action);
 

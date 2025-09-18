@@ -1,4 +1,5 @@
-﻿using EventRegistrator.Application.Enums;
+﻿using EventRegistrator.Application.Commands;
+using EventRegistrator.Application.Enums;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain.Interfaces;
@@ -72,6 +73,8 @@ namespace EventRegistrator.Application.Services
                 {
                 new MenuExtra("Редагувати", Constants.EditTemplateText,
                     c => new SwitchState(() => _stateFactory.CreateState(StateType.EditTemplateText))),
+                new MenuExtra("Видалити", Constants.DeleteHashtag,
+                c => new RunCommand((message, user) => new DeleteHashtag().Execute(message, user))),
                 new MenuExtra("🔙 Назад", "back",
                     _ => new NavigateMenu(MenuKey.Hashtags, ctx with { HashtagName = null }))
                 },
@@ -81,7 +84,7 @@ namespace EventRegistrator.Application.Services
             MenuKey.Events => new MenuDescriptor(
                 Title: ctx =>
         $"Недавнi iвенти чату {_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetTargetChat(ctx.TargetChatId.Value).ChannelName}",
-                GetItems: () => (IReadOnlyCollection<IPagiable>)_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvents(ctx.TargetChatId.Value).Reverse(),
+                GetItems: () => _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvents(ctx.TargetChatId.Value),
                 PageSize: _maxObjPerPage,
                 Extras: new[]
                 {
