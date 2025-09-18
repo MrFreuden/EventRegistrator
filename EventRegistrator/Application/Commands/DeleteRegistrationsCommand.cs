@@ -5,6 +5,7 @@ using EventRegistrator.Application.Services;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Utils;
+using Telegram.Bot.Types;
 
 namespace EventRegistrator.Application.Commands
 {
@@ -64,6 +65,7 @@ namespace EventRegistrator.Application.Commands
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
             messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, result.MessageIds.FirstOrDefault()));
+            messages.Add(_responseManager.CreateLikeMessage(result.Event.TargetChatId, result.MessageIds.FirstOrDefault()));
             return messages;
         }
     }

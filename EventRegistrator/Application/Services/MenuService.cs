@@ -161,16 +161,14 @@ namespace EventRegistrator.Application.Services
                     var participant = (ParticipantItem)ip;
 
                     return new RunCommand((message, user) => {
-                        // Используем существующую команду удаления регистрации
                         var responseManager = new ResponseManager();
                         var registrationService = new RegistrationService();
                         var command = new DeleteReigstrationsByNameCommand(responseManager, registrationService);
 
-                        // Формируем сообщение с именем участника для удаления
                         var deleteMessage = new MessageDTO
                         {
                             ChatId = user.CurrentContext.TargetChatId.Value,
-                            Text = participant.ParticipantName + "-", // Добавляем дефис для соответствия формату команды
+                            Text = participant.ParticipantName + "-",
                             ThreadId = user.CurrentContext?.EventId != null
                                 ? user.GetEvent(user.CurrentContext.EventId.Value).ThreadId : 0,
                             Id = message.Id
