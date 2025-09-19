@@ -29,7 +29,7 @@ namespace EventRegistrator.Domain.Models
             {
                 return;
             }
-            throw new NotImplementedException();
+            Console.WriteLine("Попытка добавить повторяющийся хештег");
         }
 
         public Hashtag GetHashtagByName(string name)
