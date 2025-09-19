@@ -1,4 +1,5 @@
 ﻿using EventRegistrator.Domain.DTO;
+using System.Runtime.InteropServices;
 using Telegram.Bot.Types;
 
 namespace EventRegistrator.Infrastructure.Telegram
@@ -18,7 +19,7 @@ namespace EventRegistrator.Infrastructure.Telegram
                 Created = message.Date.Add(_timeZoneOffset),
             };
 
-            if (messageDto.ReplyToMessageId != null) 
+            if (messageDto.ReplyToMessageId != null)
                 messageDto.IsReply = true;
 
             if (message.ForwardFromChat != null)

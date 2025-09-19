@@ -11,13 +11,13 @@ namespace EventRegistrator.Application.Services
             foreach (var registration in registrations)
             {
                 var result = @event.AddRegistration(registration);
-                if (result == false)
+                if (result == true)
                 {
-                    Console.WriteLine("Ошибка добавления во временной слот");
-                    return new RegistrationResult { Success = false };
+                    return new RegistrationResult { Event = @event, Success = true };
                 }
             }
-            return new RegistrationResult { Event = @event, Success = true };
+            Console.WriteLine("Ошибка добавления во временной слот");
+            return new RegistrationResult { Success = false };
         }
 
         public RegistrationResult CancelRegistration(Event @event, int messageId)

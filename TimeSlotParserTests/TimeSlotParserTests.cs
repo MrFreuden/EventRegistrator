@@ -103,7 +103,7 @@ namespace TimeSlotParserTests
             Assert.That(result.Count, Is.EqualTo(2));
             Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
             Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
-        }
+
 
         [Test]
         public void ParseRegistrationMessage_MixedNamesAndTimes_ReturnsCorrectRegistrations()
@@ -144,8 +144,9 @@ namespace TimeSlotParserTests
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(3));
 
-            Assert.That(result[0].Name, Is.EqualTo("Karlenko"));
+            Assert.That(result[0].Name, Is.EqualTo("Karlenko"));  
             Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); 
+          
             Assert.That(result[1].Name, Is.EqualTo("Karlenko"));
             Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0))); 
 
