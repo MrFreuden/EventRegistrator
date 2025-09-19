@@ -55,8 +55,8 @@ namespace EventRegistrator.Application.Services
                     c => new SwitchState(() => new AddHashtagState())),
                 new MenuExtra("Iвенти", "events",
                     _ => new NavigateMenu(MenuKey.Events, ctx)),
-                new MenuExtra("🔙 Назад", "back",
-                    _ => new NavigateMenu(MenuKey.TargetChats, ctx with { TargetChatId = null }))
+                //new MenuExtra("🔙 Назад", "back",
+                //    _ => new NavigateMenu(MenuKey.TargetChats, ctx with { TargetChatId = null }))
                 },
                 OnItem: (ip) =>
                 {
