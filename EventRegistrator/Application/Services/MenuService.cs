@@ -106,7 +106,7 @@ namespace EventRegistrator.Application.Services
             ),
 
             MenuKey.EventDetailts => new MenuDescriptor(
-                Title: ctx => $"Видалення відбувається по імені. Вибір однієї людини, видалить всі його записи \n\n{TextFormatter.FormatRegistrationsInfo(_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value))}",
+                Title: ctx => $"{TextFormatter.FormatRegistrationsInfo(_userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value))}",
                 GetItems: null,
                 PageSize: _maxObjPerPage,
                 Extras: new[]
@@ -125,7 +125,7 @@ namespace EventRegistrator.Application.Services
                 Title: ctx =>
                 {
                     var @event = _userRepository.GetUserByTargetChat(ctx.TargetChatId.Value).GetEvent(ctx.EventId.Value);
-                    return TextFormatter.FormatRegistrationsInfo(@event);
+                    return $"Видалення відбувається по імені. Вибір однієї людини, видалить всі його записи \n\n{TextFormatter.FormatRegistrationsInfo(@event)}";
                 },
                 GetItems: () =>
                 {
