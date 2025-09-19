@@ -20,8 +20,17 @@ namespace EventRegistrator.Application.Commands
 
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            var state = new StartMenuCommand(_menuStateFactory, MenuKey.TargetChats);
-            return await state.Execute(message, user);
+            var state = new StartMenuCommand(_menuStateFactory, MenuKey.Hashtags);
+            user.LastMessageId = null;
+            user.ClearStateHistory();
+            var response = await state.Execute(message, user);
+            if (response.Count != 1)
+            {
+                Console.WriteLine("Ошибка. Нетипичный ответ");
+                return [];
+            }
+            response.First().SaveMessageIdCallback = id => user.LastMessageId = id;
+            return response;
         }
     }
 }

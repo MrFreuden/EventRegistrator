@@ -20,6 +20,13 @@ namespace EventRegistrator
 {
     internal class Program
     {
+        private static Timer _saveTimer;
+        private static UserRepository _userRepository;
+        private static RepositoryLoader _loader;
+        private static readonly object _saveLock = new();
+        private static bool _isSaving = false;
+        private static readonly TimeSpan SaveInterval = TimeSpan.FromHours(6);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern IntPtr GetConsoleWindow();
 
@@ -101,6 +108,7 @@ namespace EventRegistrator
             using var cts = new CancellationTokenSource();
             Log.Information("Starting in polling mode...");
             bot.StartReceiving(handler.HandleUpdateAsync, handler.HandleErrorAsync, cancellationToken: cts.Token);
+            StartPeriodicSaving(cts.Token);
             Log.Information("Bot is running (polling). Press Ctrl+C to exit.");
             await WaitForShutdown(cts);
             Log.Information("Polling stopped.");
@@ -119,6 +127,7 @@ namespace EventRegistrator
             listener.Start();
             Log.Information("Listening HTTP on port {Port}", port);
 
+            StartPeriodicSaving(cts.Token);
             var httpTask = HandleHttp(listener, bot, handler, cts.Token);
             var shutdownTask = WaitForShutdown(cts);
             await Task.WhenAny(httpTask, shutdownTask);
@@ -142,6 +151,9 @@ namespace EventRegistrator
             //loader.SaveDataAsync(userRepository);
             //userRepository.Clear();
             services.AddSingleton(loader);
+
+            _userRepository = userRepository;
+            _loader = loader;
 
             services.AddSingleton<IUserRepository>(userRepository);
             services.AddSingleton(userRepository);
@@ -175,6 +187,69 @@ namespace EventRegistrator
             services.AddSingleton<CallbackQueryHandler>();
         }
 
+        private static void StartPeriodicSaving(CancellationToken token)
+        {
+            _saveTimer = new Timer(async _ =>
+            {
+                if (_isSaving) return;
+
+                lock (_saveLock)
+                {
+                    if (_isSaving) return;
+                    _isSaving = true;
+                }
+
+                try
+                {
+                    Log.Information("Выполняется плановое сохранение данных...");
+                    await _loader.SaveDataAsync(_userRepository);
+                    Log.Information("Плановое сохранение завершено успешно");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Ошибка при выполнении планового сохранения");
+                }
+                finally
+                {
+                    _isSaving = false;
+                }
+            }, null, TimeSpan.Zero, SaveInterval);
+
+            token.Register(async () =>
+            {
+                _saveTimer?.Dispose();
+                try
+                {
+                    Log.Information("Выполняется финальное сохранение данных перед завершением...");
+
+                    using var saveTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    var saveTask = _loader.SaveDataAsync(_userRepository);
+
+                    try
+                    {
+                        await Task.WhenAny(saveTask, Task.Delay(TimeSpan.FromSeconds(29), saveTimeoutCts.Token));
+
+                        if (saveTask.IsCompleted)
+                        {
+                            Log.Information("Финальное сохранение завершено успешно");
+                        }
+                        else
+                        {
+                            Log.Warning("Финальное сохранение не завершилось в отведенное время");
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Log.Warning("Сохранение прервано по таймауту");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Ошибка при финальном сохранении данных");
+                }
+            });
+        }
+
         private static async Task HandleHttp(HttpListener listener, ITelegramBotClient bot, BotHandler handler, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
@@ -194,31 +269,53 @@ namespace EventRegistrator
                     using var reader = new StreamReader(ctx.Request.InputStream);
                     var body = await reader.ReadToEndAsync();
 
-                    // Логируем JSON, который пришёл
-                    Log.Information("Received update JSON: {Body}", body);
-
-                    var options = new JsonSerializerOptions
+                    try 
                     {
-                        PropertyNameCaseInsensitive = true
-                    };
+                        var update = JsonSerializer.Deserialize<Update>(body, new JsonSerializerOptions 
+                        { 
+                            PropertyNameCaseInsensitive = true 
+                        });
+                        
+                        if (update != null)
+                        {
+                            if (update.Message != null)
+                            {
+                                Log.Information(
+                                    "Получено сообщение: ID={MessageId}, Чат={ChatId}, От={FromUser}, Текст={Text}",
+                                    update.Message.MessageId,
+                                    update.Message.Chat.Id,
+                                    $"{update.Message.From?.FirstName} {update.Message.From?.LastName} (@{update.Message.From?.Username})",
+                                    update.Message.Text ?? update.Message.Caption ?? "[без текста]"
+                                );
+                            }
+                            else if (update.CallbackQuery != null)
+                            {
+                                Log.Information(
+                                    "Получен callback: Данные={Data}, От={FromUser}",
+                                    update.CallbackQuery.Data,
+                                    $"{update.CallbackQuery.From.FirstName} {update.CallbackQuery.From.LastName} (@{update.CallbackQuery.From.Username})"
+                                );
+                            }
+                            else if (update.EditedMessage != null)
+                            {
+                                Log.Information(
+                                    "Получено отредактированное сообщение: ID={MessageId}, Чат={ChatId}, Текст={Text}",
+                                    update.EditedMessage.MessageId,
+                                    update.EditedMessage.Chat.Id,
+                                    update.EditedMessage.Text ?? update.EditedMessage.Caption ?? "[без текста]"
+                                );
+                            }
 
-                    Update? update = null;
-                    try
-                    {
-                        update = JsonSerializer.Deserialize<Update>(body, options);
+                            await handler.HandleUpdateAsync(bot, update, token);
+                        }
+                        else
+                        {
+                            Log.Warning("Получен POST без валидного Update");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning(ex, "Failed to deserialize Update");
-                    }
-
-                    if (update != null)
-                    {
-                        await handler.HandleUpdateAsync(bot, update, token);
-                    }
-                    else
-                    {
-                        Log.Warning("Received POST without valid Update");
+                        Log.Warning(ex, "Ошибка при обработке обновления");
                     }
 
                     ctx.Response.StatusCode = 200;
@@ -227,11 +324,11 @@ namespace EventRegistrator
                 }
                 catch (HttpListenerException ex) when (ex.ErrorCode == 995)
                 {
-                    Log.Information("HttpListener stopped");
+                    Log.Information("HttpListener остановлен");
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Unhandled error in HTTP handler");
+                    Log.Error(ex, "Необработанная ошибка в HTTP-обработчике");
                     if (ctx != null)
                     {
                         try
@@ -240,7 +337,7 @@ namespace EventRegistrator
                             await ctx.Response.OutputStream.FlushAsync();
                             ctx.Response.Close();
                         }
-                        catch { /* ignore */ }
+                        catch { /* игнорируем */ }
                     }
                 }
             }

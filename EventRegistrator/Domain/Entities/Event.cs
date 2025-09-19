@@ -1,6 +1,7 @@
 ﻿using EventRegistrator.Domain.Interfaces;
 using EventRegistrator.Infrastructure.Utils;
 using Newtonsoft.Json;
+using Telegram.Bot.Types;
 
 namespace EventRegistrator.Domain.Models
 {
@@ -19,12 +20,12 @@ namespace EventRegistrator.Domain.Models
             HashtagName = hashtagName;
             _slots = new List<TimeSlot>();
         }
-
         public Guid Id { get; }
         public string Title { get; }
         public long TargetChatId { get; }
         public string HashtagName { get; }
         public int PostId { get; }
+        public int ThreadId { get; set; }
         public int CommentMessageId { get; set; }
         public int PrivateMessageId { get; set; }
         [JsonProperty]
@@ -63,6 +64,20 @@ namespace EventRegistrator.Domain.Models
         {
             ArgumentNullException.ThrowIfNull(slot);
             _slots.Remove(slot);
+        }
+
+        public List<int> RemoveRegistrations(string name)
+        {
+            ArgumentNullException.ThrowIfNull(name);
+            var messageIds = new List<int>();
+            foreach (var slot in _slots)
+            {
+                var reg = slot.GetRegistration(name);
+                if (reg == default) continue;
+                slot.RemoveRegistration(reg);
+                messageIds.Add(reg.MessageId);
+            }
+            return messageIds;
         }
 
         public void RemoveRegistrations(int messageId)

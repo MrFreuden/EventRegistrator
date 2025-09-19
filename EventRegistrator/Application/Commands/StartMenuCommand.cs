@@ -25,7 +25,7 @@ namespace EventRegistrator.Application.Commands
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
             user.ClearStateHistory();
-            user.SetCurrentState(_menuStateFactory.Create(key: _key, ctx: new MenuContext(message.ChatId), startPage: 0));
+            user.SetCurrentState(_menuStateFactory.Create(key: _key, ctx: new MenuContext(message.ChatId, user.GetAllTargetChats().First().Id), startPage: 0));
             var response = await user.State.Handle(message, user);
             return [response];
         }

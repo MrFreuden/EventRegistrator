@@ -18,9 +18,12 @@ namespace EventRegistrator.Application.Services
         public RegistrationResult AddNewEvent(Event @event, DateTime eventTime)
         {
             var user = _userRepository.GetUserByTargetChat(@event.TargetChatId);
-            user.AddEvent(@event);
+            if (user.AddEvent(@event))
+            {
+                return new RegistrationResult { Event = @event, Success = true };
+            }
 
-            return new RegistrationResult { Event = @event, Success = true };
+            return new RegistrationResult { Event = @event, Success = false };
         }
 
         public static Event Create(MessageDTO message)

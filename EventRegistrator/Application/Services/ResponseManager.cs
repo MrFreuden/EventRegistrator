@@ -25,7 +25,7 @@ namespace EventRegistrator.Application.Services
                     Text = lastEvent.TemplateText,
                     MessageToReplyId = lastEvent.PostId,
                     SaveMessageIdCallback = id => { lastEvent.CommentMessageId = id; },
-                    ButtonData = new("Скасувати записи", Constants.Cancel),
+                    SaveMessageThreadIdCallback = id => { lastEvent.ThreadId = id; },
                 };
                 return firstCommentUpdateMessage;
             }
@@ -37,7 +37,6 @@ namespace EventRegistrator.Application.Services
                     Text = lastEvent.TemplateText,
                     //MessageToReplyId= lastEvent.PostId,
                     MessageToEditId = lastEvent.CommentMessageId,
-                    ButtonData = new("Скасувати записи", Constants.Cancel),
                 };
                 return commentUpdateMessage;
             }

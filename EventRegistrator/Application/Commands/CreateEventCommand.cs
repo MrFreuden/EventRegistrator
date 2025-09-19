@@ -30,6 +30,7 @@ namespace EventRegistrator.Application.Commands
             {
                 return _responseManager.PrepareNotificationMessages(user, @event);
             }
+
             return [new Response()];
         }
     }

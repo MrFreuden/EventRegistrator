@@ -10,7 +10,10 @@ namespace EventRegistrator.Application.States
     {
         public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user)
         {
-            user.GetTargetChat(user.CurrentContext.TargetChatId.Value).AddHashtag(new Hashtag(message.Text));
+            if (message.Text != "back")
+            {
+                user.GetTargetChat(user.CurrentContext.TargetChatId.Value).AddHashtag(new Hashtag(message.Text));
+            }
             user.RevertState();
             user.LastMessageId = null;
             return [await user.State.Handle(message, user)];

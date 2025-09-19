@@ -18,14 +18,22 @@ namespace EventRegistrator.Application.Factories
             {
                 throw new ArgumentNullException(nameof(user));
             }
+            if (message.Text.StartsWith("/say"))
+                return "/say";
+            if (message.Text.StartsWith('/'))
+                return message.Text;
             if (message.IsEdit && IsReplyToPostMessage(message, user))
-                return "DeleteRegistrations";
+                return "EditRegistrations";
             if (IsFromChannel(message, user) && IsHasHashtag(message, user))
                 return "CreateEvent";
+            if (message.Text.EndsWith('?'))
+                return string.Empty;
+            if (message.Text == "-")
+                return "DeleteRegistrations";
+            if (message.Text.EndsWith('-'))
+                return "DeleteRegistrationsByName";
             if (IsReplyToPostMessage(message, user))
                 return "Register";
-            if (message.Text.Equals(Constants.Cancel))
-                return "Cancel";
             return null;
         }
 

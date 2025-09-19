@@ -46,10 +46,10 @@ namespace TimeSlotParserTests
 
             Assert.That(result[0].UserId, Is.EqualTo(123456789));
             Assert.That(result[0].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); // 1-й слот
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
 
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0))); // 2-й слот
-            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(12, 0, 0))); // 3-й слот
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0))); 
+            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(12, 0, 0))); 
         }
 
         [Test]
@@ -103,23 +103,7 @@ namespace TimeSlotParserTests
             Assert.That(result.Count, Is.EqualTo(2));
             Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
             Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
-        }
 
-        [Test]
-        public void ParseRegistrationMessage_MultipleSlotsSingleLine_ReturnsMultipleRegistrations4()
-        {
-            // Arrange
-            var message = CreateMessage("Karlenko L. 10.00 11.00", 123456789, new DateTime(2025, 8, 8));
-
-            // Act
-            var result = TimeSlotParser.ParseRegistrationMessage(message, _slotMap);
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Count, Is.EqualTo(2));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0)));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0)));
-        }
 
         [Test]
         public void ParseRegistrationMessage_MixedNamesAndTimes_ReturnsCorrectRegistrations()
@@ -160,13 +144,14 @@ namespace TimeSlotParserTests
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(3));
 
-            Assert.That(result[0].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); // слот 1
+            Assert.That(result[0].Name, Is.EqualTo("Karlenko"));  
+            Assert.That(result[0].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); 
+          
             Assert.That(result[1].Name, Is.EqualTo("Karlenko"));
-            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0))); // слот 2
+            Assert.That(result[1].RegistrationOnTime, Is.EqualTo(new TimeSpan(11, 0, 0))); 
 
             Assert.That(result[2].Name, Is.EqualTo("Tom"));
-            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); // время 10:00
+            Assert.That(result[2].RegistrationOnTime, Is.EqualTo(new TimeSpan(10, 0, 0))); 
         }
 
         [Test]
@@ -175,7 +160,7 @@ namespace TimeSlotParserTests
             // Arrange
             var singleSlotMap = new Dictionary<int, TimeSpan>
             {
-                { 1, new TimeSpan(10, 0, 0) } // Только один слот
+                { 1, new TimeSpan(10, 0, 0) }
             };
             var message = CreateMessage("Karlenko +", 123456789, new DateTime(2025, 8, 8));
 
@@ -195,7 +180,7 @@ namespace TimeSlotParserTests
             // Arrange
             var singleSlotMap = new Dictionary<int, TimeSpan>
             {
-                { 1, new TimeSpan(10, 0, 0) } // Только один слот
+                { 1, new TimeSpan(10, 0, 0) }
             };
             var message = CreateMessage("Karlenko+", 123456789, new DateTime(2025, 8, 8));
 

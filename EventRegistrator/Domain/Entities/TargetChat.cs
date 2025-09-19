@@ -50,5 +50,13 @@ namespace EventRegistrator.Domain.Models
         {
             return _hashtags.Values;
         }
+
+        public void RemoveHashtag(string hashtag)
+        {
+            if (ContainsHashtag(hashtag))
+            {
+                _hashtags.Remove(hashtag);
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@
         HashtagDetails,
         Events,
         EventDetailts,
+        List,
     }
 
 }

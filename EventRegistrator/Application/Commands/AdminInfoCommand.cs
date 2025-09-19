@@ -1,24 +1,23 @@
 ﻿using EventRegistrator.Application.Commands.Attributes;
 using EventRegistrator.Application.DTOs;
-using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Domain.DTO;
 using EventRegistrator.Domain.Interfaces;
-using EventRegistrator.Domain.Models;
 using EventRegistrator.Infrastructure.Persistence;
 using EventRegistrator.Infrastructure.Utils;
 
 namespace EventRegistrator.Application.Commands
 {
-    [Command("/admin", "Администрирование")]
-    public class AdminCommand : ICommand
+    [Command("/admin", "Информация по последним ивентам")]
+    public class AdminInfoCommand : AdminCommandBase
     {
         private readonly IUserRepository _userRepository;
 
-        public AdminCommand(IUserRepository userRepository)
+        public AdminInfoCommand(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
-        public async Task<List<Response>> Execute(MessageDTO message, UserAdmin user = null)
+
+        protected async override Task<List<Response>> ExecuteAdminCommand(MessageDTO message)
         {
             var text2 = TextFormatter.GetAllUsersInfo(_userRepository as UserRepository);
             return [new Response { ChatId = message.ChatId, Text = text2 }];

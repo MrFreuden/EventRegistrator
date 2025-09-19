@@ -1,5 +1,5 @@
-﻿using EventRegistrator.Application.Commands;
-using EventRegistrator.Application.DTOs;
+﻿using EventRegistrator.Application.DTOs;
+using EventRegistrator.Application.Factories;
 using EventRegistrator.Application.Interfaces;
 using EventRegistrator.Application.States;
 using EventRegistrator.Domain.DTO;
@@ -11,21 +11,14 @@ namespace EventRegistrator.Application.Handlers
     public class PrivateMessageHandler : IHandler
     {
         private readonly IUserRepository _userRepository;
-        private readonly IMenuStateFactory _menuStateFactory;
+        private readonly ICommandFactory _commandFactory;
         private readonly ILogger<PrivateMessageHandler> _logger;
-        private readonly Dictionary<string, Func<ICommand>> _commands;
 
-        public PrivateMessageHandler(IUserRepository userRepository, IMenuStateFactory menuStateFactory, ILogger<PrivateMessageHandler> logger)
+        public PrivateMessageHandler(IUserRepository userRepository, ICommandFactory commandFactory, ILogger<PrivateMessageHandler> logger)
         {
             _userRepository = userRepository;
-            _menuStateFactory = menuStateFactory;
+            _commandFactory = commandFactory;
             _logger = logger;
-            _commands = new Dictionary<string, Func<ICommand>>
-            {
-                { "/start", () => new StartCommand(_userRepository) },
-                { "/settings", () => new SettingsCommand(_menuStateFactory) },
-                { "/admin", () => new AdminCommand(_userRepository) }
-            };
         }
 
         public async Task<List<Response>> HandleAsync(MessageDTO message)
@@ -36,14 +29,33 @@ namespace EventRegistrator.Application.Handlers
                 _logger.LogWarning("User not found for chat {ChatId}", message.ChatId);
                 return new List<Response>();
             }
-            
+
             if (IsCommand(message))
             {
-                var defaultState = new DefaultState(_commands);
-                return [await defaultState.Handle(message, user)];
+                var commandName = CommandTypeResolver.DetermineCommandName(message, user);
+                if (commandName == null)
+                {
+                    _logger.LogWarning("HandleAsync: command type not determined for user {UserId}", user.Id);
+                    return new List<Response>();
+                }
+
+                var command = _commandFactory.CreateCommand(commandName);
+                if (command == null)
+                {
+                    _logger.LogError("HandleAsync: failed to create command for type {CommandType}", commandName);
+                    return new List<Response>();
+                }
+
+                var response = await command.Execute(message, user);
+                if (response == null || response.Count == 0)
+                {
+                    _logger.LogError("Failed to execute command. Command: {Command}", command);
+                    return new List<Response>();
+                }
+                return response;
             }
 
-            if (user.State != null || user.State as DefaultState == null)
+            if (user.State != null)
             {
                 var response = await user.State.Execute(message, user);
                 if (response == null || response.Count == 0)

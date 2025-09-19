@@ -61,11 +61,27 @@ namespace EventRegistrator.Application.States
             if (d.GetItems is not null)
             {
                 var pageItems = items.Skip(_page * d.PageSize).Take(d.PageSize);
-                var pageRow = new List<Button>();
-                foreach (var it in pageItems)
-                    pageRow.Add(new Button(it.Name, it.Callback));
+                int rowSize = d.RowSize;
+                var currentRow = new List<Button>();
+                int currentCount = 0;
 
-                buttons.Add(pageRow);
+                foreach (var it in pageItems)
+                {
+                    currentRow.Add(new Button(it.Name, it.Callback));
+                    currentCount++;
+
+                    if (currentCount >= rowSize)
+                    {
+                        buttons.Add(currentRow);
+                        currentRow = new List<Button>();
+                        currentCount = 0;
+                    }
+                }
+
+                if (currentRow.Count > 0)
+                {
+                    buttons.Add(currentRow);
+                }
 
                 AddNavigationButtons(buttons, maxPage);
             }
@@ -121,8 +137,8 @@ namespace EventRegistrator.Application.States
                     return [await user.State.Handle(message, user)];
 
                 case RunCommand rc:
-                    await rc.Do();
-                    return [await Handle(message, user)];
+                    var responses = await rc.Action(message, user);
+                    return responses ?? [new Response { /* ... */ }];
 
                 case Noop:
                 default:

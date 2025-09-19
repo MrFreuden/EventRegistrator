@@ -33,6 +33,16 @@ namespace EventRegistrator.Domain.Models
             return true;
         }
 
+        public bool Contains(string name)
+        {
+            return _currentRegistrations.Any(registration => registration.Name == name);
+        }
+
+        public bool Contains(long userId)
+        {
+            return _currentRegistrations.Any(registration => registration.UserId == userId);
+        }
+
         public bool AddRegistration(Registration registration)
         {
             if (CanRegister(registration))
@@ -100,6 +110,11 @@ namespace EventRegistrator.Domain.Models
         public Registration GetRegistration(long userId)
         {
             return _currentRegistrations.FirstOrDefault(r => r.UserId == userId);
+        }
+
+        public Registration GetRegistration(string name)
+        {
+            return _currentRegistrations.FirstOrDefault(r => r.Name == name);
         }
     }
 }

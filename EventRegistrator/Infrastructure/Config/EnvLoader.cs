@@ -87,5 +87,10 @@ namespace EventRegistrator.Infrastructure.Config
             user.AddTargetChat(targetChat);
             userRepository.AddUser(user);
         }
+
+        public static long GetAdminId()
+        {
+            return long.Parse(Environment.GetEnvironmentVariable("ADMIN_ID"));
+        }
     }
 }
