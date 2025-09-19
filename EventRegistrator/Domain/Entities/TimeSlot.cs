@@ -38,6 +38,11 @@ namespace EventRegistrator.Domain.Models
             return _currentRegistrations.Any(registration => registration.Name == name);
         }
 
+        public bool Contains(long userId)
+        {
+            return _currentRegistrations.Any(registration => registration.UserId == userId);
+        }
+
         public bool AddRegistration(Registration registration)
         {
             if (CanRegister(registration))

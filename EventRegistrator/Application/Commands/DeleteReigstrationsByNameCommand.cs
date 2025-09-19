@@ -37,20 +37,24 @@ namespace EventRegistrator.Application.Commands
             {
                 var text = TimeSlotParser.UpdateTemplateText(@event.TemplateText, @event.Slots);
                 @event.UpdateTemplate(text);
-                return GetSuccessResponsesForEdit(user, resultUndo, message.Id);
+                return GetSuccessResponsesForEdit(user, resultUndo, message);
             }
 
             return [];
         }
 
-        private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result, int messageId)
+        private List<Response> GetSuccessResponsesForEdit(UserAdmin user, RegistrationResult result, MessageDTO message)
         {
             var messages = _responseManager.PrepareNotificationMessages(user, result.Event);
             foreach (var id in result.MessageIds)
             {
                 messages.Add(_responseManager.CreateUnlikeMessage(result.Event.TargetChatId, id));
             }
-            messages.Add(_responseManager.CreateLikeMessage(result.Event.TargetChatId, messageId));
+            if (message.UserId is not null)
+            {
+                messages.Add(_responseManager.CreateLikeMessage(result.Event.TargetChatId, message.Id));
+            }
+            
             return messages;
         }
     }
