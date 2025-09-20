@@ -55,7 +55,7 @@ namespace EventRegistrator.Application.Commands
                 if (regs.Count == 0)
                 {
                     _logger.LogWarning("Не удалось распарсить сообщение для регистранции при редактировании");
-                    return [];
+                    return responses;
                 }
                 var result = _registrationService.ProcessRegistration(@event, regs);
                 if (result.Success)
